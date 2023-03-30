@@ -59,11 +59,11 @@ public:
 
         genSegmentImageFromPLabelMat();
 
-        std::string pathLabelImg = m_out_path + "/pngs/" + seg_file_prefix + std::to_string(idx) + ".png";
-        std::string pathLabelImgColor = m_out_path + "/pngs/" + seg_file_prefix + std::to_string(idx) + "_color.png";
+        std::string pathLabelImg = m_out_path + "pngs/" + seg_file_prefix + std::to_string(idx) + ".png";
+        std::string pathLabelImgColor = m_out_path + "pngs/" + seg_file_prefix + std::to_string(idx) + "_color.png";
 
-        fprintf(stderr, "label image path : %s\n", pathLabelImg.c_str() );
-        fprintf(stderr, "color label image path : %s\n", pathLabelImgColor.c_str() );
+        // fprintf(stderr, "label image path : %s\n", pathLabelImg.c_str() );
+        // fprintf(stderr, "color label image path : %s\n", pathLabelImgColor.c_str() );
 
         cv::imwrite(pathLabelImg, plabel_img);
         cv::imwrite(pathLabelImgColor, plabel_img_c);
@@ -97,7 +97,7 @@ public:
         fwrite(m_SegmentImage,1,ROWS*COLS,fptw);
         fclose(fptw);
 
-        fprintf(stderr, "SegmentImage saved ...\n");
+        // fprintf(stderr, "SegmentImage saved ...\n");
     }
 
     void save_plane_params(std::string file_prefix, int file_idx, std::string file_suffix) {
@@ -138,14 +138,14 @@ public:
                 m_plane_params[i-10].m_c);                
             }
         fclose(fptw);
-        fprintf(stderr, "plane params saved ...\n");
+        // fprintf(stderr, "plane params saved ...\n");
     }
 
     void genSegmentImageFromPLabelMat() {
         std::map<int, int> plabel_index_map;
         for(int i=0; i < m_plane_params.size(); i++) {
             auto pl_param = m_plane_params[i];
-            fprintf(stderr, "plane[%d] -- label: %d \n", i, pl_param.m_plabel);
+            // fprintf(stderr, "plane[%d] -- label: %d \n", i, pl_param.m_plabel);
             plabel_index_map.insert( {pl_param.m_plabel, i} );
         }
 

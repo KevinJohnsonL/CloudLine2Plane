@@ -3,9 +3,10 @@
 ##### HDL-64 realistic data.
 lidar_type="hdl64"
 start_idx=0
-end_idx=0
-data_path="../../Data/realistic_data/${lidar_type}_dataset/"
-prefix="${lidar_type}_calib_"
+end_idx=9
+data_path="../../Data/realistic_data/${lidar_type}_dataset/0/"
+# data_path="/media/lemon/database/odometry_velodyne/velodyne/sequences/00/velodyne/"
+prefix="${lidar_type}_"
 
 ##### HDL-32 realistic data.
 # lidar_type="hdl32"
@@ -31,7 +32,7 @@ output_path="../../Data/realistic_data/test/${lidar_type}/"
 
 
 flip_flag=1;
-repeat_num=100;
+repeat_num=0;
 
 echo $config_file
 echo $data_path

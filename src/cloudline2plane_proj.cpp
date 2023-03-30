@@ -70,7 +70,7 @@ int main(int argc, char * argv[]) {
         
 
 
-        std::string file_path = segcomp_path + prefix + std::to_string(i) + ".ptx";
+        std::string file_path = segcomp_path + prefix + std::to_string(i) + ".xyz";
         float *coords[3];
 
         // loadSegCompPerceptron3(file_path, ROWS, COLS, coords);
@@ -299,16 +299,16 @@ int main(int argc, char * argv[]) {
 
     std::cout << output_path << std::endl;
 
-    std::string pathTimesFile = output_path + "/timings/times.txt";
+    std::string pathTimesFile = output_path + "timings/times.txt";
     saveTimesToFile(pathTimesFile, times_vec);
 
     std::vector<double> pr_times = pe.getPRTimeVec();
     std::vector<double> le_times = pe.getLETimeVec();
     std::vector<double> pe_times = pe.getPETimeVec();
 
-    std::string pathPrTimesFile = output_path + "/timings/pr_times.txt";
-    std::string pathLeTimesFile = output_path + "/timings/le_times.txt";
-    std::string pathPeTimesFile = output_path + "/timings/pe_times.txt";
+    std::string pathPrTimesFile = output_path + "timings/pr_times.txt";
+    std::string pathLeTimesFile = output_path + "timings/le_times.txt";
+    std::string pathPeTimesFile = output_path + "timings/pe_times.txt";
 
     saveTimesToFile(pathPrTimesFile, pr_times);
     saveTimesToFile(pathLeTimesFile, le_times);

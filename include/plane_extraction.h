@@ -21,6 +21,12 @@ public:
 
     // output.
     cv::Mat labelImage() { return m_plabel_image; }
+    cv::Mat rangeImage() {  return m_le.getDepthImage();   }
+    cv::Mat xImage() {  return m_le.getXImage();   }
+    cv::Mat yImage() {  return m_le.getYImage();  }
+    cv::Mat zImage() {  return m_le.getZImage();   }
+    
+
     std::vector<PlaneParams> planeParamsVec() { return m_pl_params_vec; }
 
     std::vector<std::vector<line>> getVSweepLines() { return m_le.getVSweepLines(); }
@@ -50,6 +56,11 @@ public:
 
     // output variables.
     cv::Mat m_plabel_image;
+    cv::Mat m_range_image;
+    cv::Mat m_x_image;
+    cv::Mat m_y_image;
+    cv::Mat m_z_image;
+
     std::vector<PlaneParams> m_pl_params_vec;
 
 

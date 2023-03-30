@@ -34,9 +34,11 @@ void loadSegCompPerceptron3(std::string file_name, int rows, int cols, float* P[
         //     std::cout << px << ", " << py << ", " << pz << std::endl;
         // }
         std::string spx, spy, spz;
+        // std::cerr << ".xyz -> px, py, pz" <<std::endl;
         std::getline(ss, spx, ' ');
         std::getline(ss, spy, ' ');
-        std::getline(ss, spz, ' ');
+        // std::getline(ss, spz, ' ');
+        std::getline(ss, spz);
         float px, py, pz;
         if(spx=="NaN" || spy=="NaN" || spz=="NaN") {
             px = py = pz = std::numeric_limits<float>::quiet_NaN();

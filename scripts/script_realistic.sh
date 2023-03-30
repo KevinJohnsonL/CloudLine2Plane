@@ -16,9 +16,10 @@ end_idx=0
 # end_idx=869
 
 config_file="../config/${lidar_type}_real.yaml"
-data_path="../../Data/realistic_data/${lidar_type}/"
+data_path="../../Data/realistic_data/${lidar_type}/0/"
+# data_path="/media/lemon/database/odometry_velodyne/velodyne/sequences/00/velodyne/"
 prefix="${lidar_type}_"
-output_path="../../Results//realistic/${lidar_type}/${lidar_type}_results/"
+output_path="../../Results/realistic/${lidar_type}/${lidar_type}_results/"
 
 # for paper drawing
 # start_idx=40
