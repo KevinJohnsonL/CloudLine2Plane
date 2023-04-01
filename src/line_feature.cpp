@@ -204,18 +204,18 @@ namespace line_feature
             mid1 = 0;
             mid2 = 0;
             mid3 = 0;
-            mid4 = 0;
+            // mid4 = 0;
             mid5 = 0;
             int i = 0;
             int k = 0;
             for(i = start;i <= end;i++)
             {
                 k = m_valid_index[i];
-                mid1+=range_data_.xs[k];
-                mid2+=range_data_.ys[k];
-                mid3+=range_data_.xs[k]*range_data_.xs[k];
-                mid4+=range_data_.ys[k]*range_data_.ys[k];
-                mid5+=range_data_.xs[k]*range_data_.ys[k];
+                mid1+=range_data_.xs[k]; //sumX
+                mid2+=range_data_.ys[k];//sumY
+                mid3+=range_data_.xs[k]*range_data_.xs[k];//sumX^2
+                // mid4+=range_data_.ys[k]*range_data_.ys[k];//sumY^2
+                mid5+=range_data_.xs[k]*range_data_.ys[k];//sumXY
             }                
 
         }
@@ -227,181 +227,135 @@ namespace line_feature
                 mid1+=range_data_.xs[k_end];
                 mid2+=range_data_.ys[k_end];
                 mid3+=range_data_.xs[k_end]*range_data_.xs[k_end];
-                mid4+=range_data_.ys[k_end]*range_data_.ys[k_end];
+                // mid4+=range_data_.ys[k_end]*range_data_.ys[k_end];
                 mid5+=range_data_.xs[k_end]*range_data_.ys[k_end];                    
       
             }
             else
             {
                 k_start = m_valid_index[start];
-                mid1+=range_data_.xs[k_start];
-                mid2+=range_data_.ys[k_start];
-                mid3+=range_data_.xs[k_start]*range_data_.xs[k_start];
-                mid4+=range_data_.ys[k_start]*range_data_.ys[k_start];
-                mid5+=range_data_.xs[k_start]*range_data_.ys[k_start];              
+                mid1+=range_data_.xs[k_start];//sumX
+                mid2+=range_data_.ys[k_start];//sumY
+                mid3+=range_data_.xs[k_start]*range_data_.xs[k_start];//sumX^2
+                // mid4+=range_data_.ys[k_start]*range_data_.ys[k_start];//sumY^2
+                mid5+=range_data_.xs[k_start]*range_data_.ys[k_start];//sumXY              
             }
         }
-        w1 = n*mid5-mid1*mid2;
-        w2 = mid2*mid2-n*mid4-mid1*mid1+n*mid3;
-        w3 = mid1*mid2-n*mid5;
+        double detX = n*mid3-mid1*mid1;
+
+        // w1 = n*mid5-mid1*mid2;
+        // w2 = mid2*mid2-n*mid4-mid1*mid1+n*mid3;
+        // w3 = mid1*mid2-n*mid5;
+
         //ax+by+c = 0 等价于 y = kx + b;kx-y + b = 0 //a = k,c = b,b=-1
-        if(w1==0)
+        if(fabs(detX) <= 1e-15)
         {
             temp.a = -1;
             temp.b = 0;
             temp.c = mid1/n;
-            // std::cout << ">>>>>>>>zero w1 occured ...." << std::endl;
+            // std::cout << ">>>>>>>> x = " << mid1/n << " occured ...." << std::endl;
             // std::cout << "(w1, w2, w3): " << w1 << ", " << w2 << ", " << w3 << std::endl;
         }
         else
-        {
-            // double tmp_s1 = mid1*mid4 - mid2*mid5;
-            // double tmp_s2 = mid2*mid3 - mid1*mid5;
-            // double tmp_s3 = mid5*mid5 - mid3*mid4;
-            // temp.a = -tmp_s1/tmp_s2;
-            // temp.b = -1;
-            // temp.c = -tmp_s3/tmp_s2;
-
-            temp.a = (-w2+sqrt(w2*w2-4*w1*w3))/2.0/w1;
+        {   
+            temp.a = (n * mid5 - mid1 * mid2) / detX;
+            // temp.a = (-w2+sqrt(w2*w2-4*w1*w3))/2.0/w1;
             temp.b = -1;
-            temp.c = (mid2-temp.a*mid1)/n;
-
-            // temp.a = (-w2-sqrt(w2*w2-4*w1*w3))/2.0/w1;
-            // temp.b = -1;            
+            temp.c = (mid3 * mid2 - mid1 * mid5) / detX;
             // temp.c = (mid2-temp.a*mid1)/n;
-
-            // double delta_w = w2*w2 - 4*w1*w3;
-            // double sqrt_dw = sqrt(delta_w);
-            // double minus_a = (-w2 - sqrt_dw) / 2.0/w1;
-
-            // std::cout << "larger a vas smaller a: " << temp.a << ", " << minus_a << std::endl;
-            // std::cout << "delta_w:  " << delta_w << ", sqrt_dw: " << sqrt_dw << std::endl;
-            // std::cout << "(w1, w2, w3): " << w1 << ", " << w2 << ", " << w3 << std::endl;
-
         }
-
-        // double det_x = n*mid3 - mid1*mid1;
-        // double det_y = n*mid4 - mid2*mid2;
-        // if(det_x > det_y) {
-        //     double tmp_lxk = (n*mid5 - mid1*mid2)/det_x;
-        //     double tmp_lxb = (mid2 - tmp_lxk*mid1)/n;
-
-        //     temp.a = tmp_lxk;
-        //     temp.b = -1;
-        //     temp.c = tmp_lxb;
-        // } else {
-        //     if(det_y>0) {
-        //         double tmp_lyk = (n*mid5 - mid1*mid2)/det_y;
-        //         double tmp_lyb = (mid1 - tmp_lyk*mid2)/n;
-        //         if(tmp_lyk == 0) {
-        //             temp.a = -1;
-        //             temp.b = 0;
-        //             temp.c = mid1/n;
-        //         } else {
-        //             temp.a = 1/tmp_lyk;
-        //             temp.b = -1;
-        //             temp.c = -tmp_lyb/tmp_lyk;                     
-        //         }
-               
-        //     } else {
-        //         // invalid line.
-        //         // fprintf(stderr, "[[[[[[[[[[[[[[[[[[[invalid line occur..]]]]]] \n");
-        //         temp.a = 0.001;
-        //         temp.b = 0.001;
-        //         temp.c = 10000;
-        //     }
-        // }
         return temp;
     }
+
 //判断下一个点是否在直线上，是，返回true；否则，返回false。
-    bool LineFeature::detectline(const int start,const int num)
-    {
+    // bool LineFeature::detectline(const int start,const int num)
+    // {
 
-        bool flag = false;
-        //定义点到直线的垂直误差
-        double error1 = 0;
-        //定义下一点到预测位置的误差
-        double error2 = 0;
-        int i = 0;
-        int k = 0;
-        //预测下一点位置
-        POINT m_pn;
-        m_pn.x = 0;
-        m_pn.y = 0;
-        //下一点，y = kp*x;
-        double kp = 0;
-        double theta = 0;
-        // cout << "start:" << start << ", num:" << num << endl;
-        // cout << "valid point num: " << m_valid_index.size() << endl;
-        for(i = start;i < start+num;i++)
-        {
-            // cout << "i:" << i << "raw idx:" << m_valid_index[i] << endl;
-            // if(i >= m_valid_index.size()) {
-            //     cout << "i: " << i << " vs: " << m_valid_index.size() << endl;
-            // }
-            k = m_valid_index[i];
-            // if( k >= 1800)
-            // {
-            //     cout << "k: " << k << endl;
-            // }
+    //     bool flag = false;
+    //     //定义点到直线的垂直误差
+    //     double error1 = 0;
+    //     //定义下一点到预测位置的误差
+    //     double error2 = 0;
+    //     int i = 0;
+    //     int k = 0;
+    //     //预测下一点位置
+    //     POINT m_pn;
+    //     m_pn.x = 0;
+    //     m_pn.y = 0;
+    //     //下一点，y = kp*x;
+    //     double kp = 0;
+    //     double theta = 0;
+    //     // cout << "start:" << start << ", num:" << num << endl;
+    //     // cout << "valid point num: " << m_valid_index.size() << endl;
+    //     for(i = start;i < start+num;i++)
+    //     {
+    //         // cout << "i:" << i << "raw idx:" << m_valid_index[i] << endl;
+    //         // if(i >= m_valid_index.size()) {
+    //         //     cout << "i: " << i << " vs: " << m_valid_index.size() << endl;
+    //         // }
+    //         k = m_valid_index[i];
+    //         // if( k >= 1800)
+    //         // {
+    //         //     cout << "k: " << k << endl;
+    //         // }
 
-            // 10 degrees. 2.5*10 = 25, 5 degs, 12.5 pts.
-            double r1 = range_data_.ranges[k];
-            if(i>=1 && 
-                (k - m_valid_index[i-1]>params_.pts_missing_tolerance ||
-                 std::fabs(r1 - range_data_.ranges[m_valid_index[i-1]]) > params_.max_pts_gap) )
-            {
-                flag = true;
-                break;
-            } 
+    //         // 10 degrees. 2.5*10 = 25, 5 degs, 12.5 pts.
+    //         double r1 = range_data_.ranges[k];
+    //         if(i>=1 && 
+    //             (k - m_valid_index[i-1]>params_.pts_missing_tolerance ||
+    //              std::fabs(r1 - range_data_.ranges[m_valid_index[i-1]]) > params_.max_pts_gap) )
+    //         {
+    //             flag = true;
+    //             break;
+    //         } 
 
-            // cout << i << ": before perpendicular distance " << endl;
-            //到直线的垂直距离
-            // error1 = fabs(((m_least.a)*range_data_.xs[k]+(m_least.b)*range_data_.ys[k]+m_least.c))/sqrt((1+(m_least.a)*(m_least.a)));
-            error1 = fabs(((m_least.a)*range_data_.xs[k]+(m_least.b)*range_data_.ys[k]+m_least.c))/sqrt(((m_least.b)*(m_least.b)+(m_least.a)*(m_least.a)));
+    //         // cout << i << ": before perpendicular distance " << endl;
+    //         //到直线的垂直距离
+    //         // error1 = fabs(((m_least.a)*range_data_.xs[k]+(m_least.b)*range_data_.ys[k]+m_least.c))/sqrt((1+(m_least.a)*(m_least.a)));
+    //         error1 = fabs(((m_least.a)*range_data_.xs[k]+(m_least.b)*range_data_.ys[k]+m_least.c))/sqrt(((m_least.b)*(m_least.b)+(m_least.a)*(m_least.a)));
 
-            if(error1 > params_.least_thresh)
-            {
-                flag = true;
-                break;
-            }
+    //         if(error1 > params_.least_thresh)
+    //         {
+    //             flag = true;
+    //             break;
+    //         }
 
-            theta = params_.angle_increment*k + params_.angle_start;
-            if(fabs((fabs(theta) - PI/2))<1e-05)
-            {
-                m_pn.x = 0;
-                m_pn.y = m_least.c;
-            }
-            else
-            {
-                kp = tan(theta);
-                m_pn.x = (m_least.c)/(kp - m_least.a);
-                m_pn.y = kp*m_pn.x;
-            }
+    //         theta = params_.angle_increment*k + params_.angle_start;
+    //         if(fabs((fabs(theta) - PI/2))<1e-05)
+    //         {
+    //             m_pn.x = 0;
+    //             m_pn.y = m_least.c;
+    //         }
+    //         else
+    //         {
+    //             kp = tan(theta);
+    //             m_pn.x = (m_least.c)/(kp - m_least.a);
+    //             m_pn.y = kp*m_pn.x;
+    //         }
 
-            // cout << i << ": before distance_point " << endl;
+    //         // cout << i << ": before distance_point " << endl;
 
-            //计算到预测点之间的误差
-            error2 = distance_point(range_data_.xs[k],range_data_.ys[k],m_pn.x,m_pn.y);
+    //         //计算到预测点之间的误差
+    //         error2 = distance_point(range_data_.xs[k],range_data_.ys[k],m_pn.x,m_pn.y);
             
-            // cout << i << ": after distance point" << error2 << endl;
-            if(error2 > params_.predict_distance)
-            {
-                flag = true;
-                break;
-            }
-            // cout << "for loop finished ..." << endl;
-            // cout << "-----------------------" << endl;
-        }
-        if(flag)
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
-    }
+    //         // cout << i << ": after distance point" << error2 << endl;
+    //         if(error2 > params_.predict_distance)
+    //         {
+    //             flag = true;
+    //             break;
+    //         }
+    //         // cout << "for loop finished ..." << endl;
+    //         // cout << "-----------------------" << endl;
+    //     }
+    //     if(flag)
+    //     {
+    //         return false;
+    //     }
+    //     else
+    //     {
+    //         return true;
+    //     }
+    // }
 
 //检测完整的直线段
     int LineFeature::detectfulline(const int start)
@@ -448,6 +402,9 @@ namespace line_feature
                 else
                 {
                     flag2 = false;
+                    a = m_least.a;
+                    b = m_least.b;
+                    c = m_least.c;
                 }
             }
             else
@@ -455,9 +412,10 @@ namespace line_feature
                 flag2 = false;
             }
         }
-        if(n2 < m_valid_index.size()-1) {
-            n2 = n2-1;
-        }
+        // if(n2 < m_valid_index.size()-1) {
+        //     n2 = n2-1;
+        // }
+
         //向后回溯
 
         n1 = start - 1;
@@ -493,7 +451,7 @@ namespace line_feature
                 flag1 = false;
             }
         }
-        n1 = n1+1;
+        //  n1 = n1+1;
 
         m_temp.left = n1;
         m_temp.right = n2;
@@ -648,311 +606,311 @@ namespace line_feature
     }
 
 
-    void LineFeature::generate(std::vector<gline>& temp_line2)
-    {
-        gline line_temp;
-        std::vector<gline> output;
-        POINT endpoint1;
-        POINT endpoint2;
-        int m = 0,n = 0;
-        double k1 = 0,k2 = 0;
-        for(int i = 0;i < m_line.size();i++)
-        {   
-            // if(m_line[i].left >= m_valid_index.size() || m_line[i].right >= m_valid_index.size()) {
-            //     cout << "line segment range i: " << i << ", left: " << m_line[i].left << ", right: " << m_line[i].right << endl;
-            // }
-            m = m_valid_index[m_line[i].left];
-            n = m_valid_index[m_line[i].right];
+    // void LineFeature::generate(std::vector<gline>& temp_line2)
+    // {
+    //     gline line_temp;
+    //     std::vector<gline> output;
+    //     POINT endpoint1;
+    //     POINT endpoint2;
+    //     int m = 0,n = 0;
+    //     double k1 = 0,k2 = 0;
+    //     for(int i = 0;i < m_line.size();i++)
+    //     {   
+    //         // if(m_line[i].left >= m_valid_index.size() || m_line[i].right >= m_valid_index.size()) {
+    //         //     cout << "line segment range i: " << i << ", left: " << m_line[i].left << ", right: " << m_line[i].right << endl;
+    //         // }
+    //         m = m_valid_index[m_line[i].left];
+    //         n = m_valid_index[m_line[i].right];
 
-            m_line[i].left = m;
-            m_line[i].right = n;
+    //         m_line[i].left = m;
+    //         m_line[i].right = n;
 
-            // cout << "line idx range [m,n]: " << m << ", " << n << endl;
-            // if( m > n)
-            //     cout << "descending line occured ....." << endl;
-            calcVarianceOfFittedLine(m_line[i], m, n);
+    //         // cout << "line idx range [m,n]: " << m << ", " << n << endl;
+    //         // if( m > n)
+    //         //     cout << "descending line occured ....." << endl;
+    //         calcVarianceOfFittedLine(m_line[i], m, n);
 
-            // if(m_line[i].b!=0)
-            // {
-            //     endpoint1.x = (range_data_.xs[m]/m_line[i].a + range_data_.ys[m] - m_line[i].c)/(m_line[i].a + 1.0/(m_line[i].a));
-            //     endpoint1.y = m_line[i].a*endpoint1.x + m_line[i].c;
-            // }
-            // else
-            // {
-            //     endpoint1.x = range_data_.ys[m];
-            //     endpoint1.y = m_line[i].c/m_line[i].a;
-            // }
-            double l_a = m_line[i].a;
-            double l_b = m_line[i].b;
-            double l_c = m_line[i].c;
-            double l_aa = l_a*l_a;
-            double l_ab = l_a*l_b;
-            double l_ac = l_a*l_c;
-            double l_bb = l_b*l_b;
-            double l_bc = l_b*l_c;
-            double l_aa_p_bb = l_aa + l_bb;
-            endpoint1.x = (l_bb*range_data_.xs[m] - l_ab*range_data_.ys[m] - l_ac)/l_aa_p_bb;
-            endpoint1.y = (l_aa*range_data_.ys[m] - l_ab*range_data_.xs[m] - l_bc)/l_aa_p_bb;
+    //         // if(m_line[i].b!=0)
+    //         // {
+    //         //     endpoint1.x = (range_data_.xs[m]/m_line[i].a + range_data_.ys[m] - m_line[i].c)/(m_line[i].a + 1.0/(m_line[i].a));
+    //         //     endpoint1.y = m_line[i].a*endpoint1.x + m_line[i].c;
+    //         // }
+    //         // else
+    //         // {
+    //         //     endpoint1.x = range_data_.ys[m];
+    //         //     endpoint1.y = m_line[i].c/m_line[i].a;
+    //         // }
+    //         double l_a = m_line[i].a;
+    //         double l_b = m_line[i].b;
+    //         double l_c = m_line[i].c;
+    //         double l_aa = l_a*l_a;
+    //         double l_ab = l_a*l_b;
+    //         double l_ac = l_a*l_c;
+    //         double l_bb = l_b*l_b;
+    //         double l_bc = l_b*l_c;
+    //         double l_aa_p_bb = l_aa + l_bb;
+    //         endpoint1.x = (l_bb*range_data_.xs[m] - l_ab*range_data_.ys[m] - l_ac)/l_aa_p_bb;
+    //         endpoint1.y = (l_aa*range_data_.ys[m] - l_ab*range_data_.xs[m] - l_bc)/l_aa_p_bb;
 
-            line_temp.x1 = endpoint1.x;
-            line_temp.y1 = endpoint1.y;
+    //         line_temp.x1 = endpoint1.x;
+    //         line_temp.y1 = endpoint1.y;
 
-            m_line[i].p1 = endpoint1;
+    //         m_line[i].p1 = endpoint1;
 
-            // if(m_line[i].b!=0)
-            // {
-            //     endpoint2.x = (range_data_.xs[n]/m_line[i].a + range_data_.ys[n] - m_line[i].c)/(m_line[i].a + 1.0/(m_line[i].a));
-            //     endpoint2.y = m_line[i].a*endpoint2.x + m_line[i].c;
-            // }
-            // else
-            // {
-            //     endpoint2.x = range_data_.ys[n];
-            //     endpoint2.y = m_line[i].c/m_line[i].a;
-            // }
+    //         // if(m_line[i].b!=0)
+    //         // {
+    //         //     endpoint2.x = (range_data_.xs[n]/m_line[i].a + range_data_.ys[n] - m_line[i].c)/(m_line[i].a + 1.0/(m_line[i].a));
+    //         //     endpoint2.y = m_line[i].a*endpoint2.x + m_line[i].c;
+    //         // }
+    //         // else
+    //         // {
+    //         //     endpoint2.x = range_data_.ys[n];
+    //         //     endpoint2.y = m_line[i].c/m_line[i].a;
+    //         // }
 
 
-            endpoint2.x = (l_bb*range_data_.xs[n] - l_ab*range_data_.ys[n] - l_ac)/l_aa_p_bb;
-            endpoint2.y = (l_aa*range_data_.ys[n] - l_ab*range_data_.xs[n] - l_bc)/l_aa_p_bb;
+    //         endpoint2.x = (l_bb*range_data_.xs[n] - l_ab*range_data_.ys[n] - l_ac)/l_aa_p_bb;
+    //         endpoint2.y = (l_aa*range_data_.ys[n] - l_ab*range_data_.xs[n] - l_bc)/l_aa_p_bb;
 
-            line_temp.x2 = endpoint2.x;
-            line_temp.y2 = endpoint2.y;
+    //         line_temp.x2 = endpoint2.x;
+    //         line_temp.y2 = endpoint2.y;
 
-            m_line[i].p2 = endpoint2;
+    //         m_line[i].p2 = endpoint2;
 
-            m_line[i].len = distance_point(endpoint1.x, endpoint1.y, endpoint2.x, endpoint2.y);
+    //         m_line[i].len = distance_point(endpoint1.x, endpoint1.y, endpoint2.x, endpoint2.y);
 
-            // calculate vertical point, theta, distance.
-            double vp_x, vp_y, vp_theta, vp_dist;
-            vp_x = -m_line[i].a*m_line[i].c/(m_line[i].a*m_line[i].a + m_line[i].b*m_line[i].b);
-            vp_y = -m_line[i].b*m_line[i].c/(m_line[i].a*m_line[i].a + m_line[i].b*m_line[i].b);
-            vp_theta = std::atan2(vp_y, vp_x);
-            vp_dist = std::sqrt(vp_x*vp_x + vp_y*vp_y);
+    //         // calculate vertical point, theta, distance.
+    //         double vp_x, vp_y, vp_theta, vp_dist;
+    //         vp_x = -m_line[i].a*m_line[i].c/(m_line[i].a*m_line[i].a + m_line[i].b*m_line[i].b);
+    //         vp_y = -m_line[i].b*m_line[i].c/(m_line[i].a*m_line[i].a + m_line[i].b*m_line[i].b);
+    //         vp_theta = std::atan2(vp_y, vp_x);
+    //         vp_dist = std::sqrt(vp_x*vp_x + vp_y*vp_y);
 
-            m_line[i].theta = vp_theta;
-            m_line[i].vdist = vp_dist;
-            m_line[i].vp.x = vp_x;
-            m_line[i].vp.y = vp_y;
-            m_line[i].nvp.x = vp_x / vp_dist;
-            m_line[i].nvp.y = vp_y / vp_dist;
+    //         m_line[i].theta = vp_theta;
+    //         m_line[i].vdist = vp_dist;
+    //         m_line[i].vp.x = vp_x;
+    //         m_line[i].vp.y = vp_y;
+    //         m_line[i].nvp.x = vp_x / vp_dist;
+    //         m_line[i].nvp.y = vp_y / vp_dist;
 
-            output.push_back(line_temp);
-        }
-        temp_line2 = output;
-    }
+    //         output.push_back(line_temp);
+    //     }
+    //     temp_line2 = output;
+    // }
 
 //识别主函数
-    void LineFeature::extractLines(std::vector<line>& temp_line1,std::vector<gline>& temp_line2)
-    {
-        int line_include = 0;
-        m_line.clear();
-        point_num_ = cs_data_.index;
+// void LineFeature::extractLines(std::vector<line>& temp_line1,std::vector<gline>& temp_line2)
+//     {
+//         int line_include = 0;
+//         m_line.clear();
+//         point_num_ = cs_data_.index;
 
-        if(point_num_.size() < params_.min_line_points)
-        {
-            return;
-        }
-        //附近特征点数目
+//         if(point_num_.size() < params_.min_line_points)
+//         {
+//             return;
+//         }
+//         //附近特征点数目
 
-        for(unsigned int i = 0; i < (m_valid_index.size() - params_.min_line_points) ;i++)
-        {
-            // cout << "[LF 619] -- before least square" << endl; 
-            m_least = leastsquare(i,i + params_.seed_line_points - 1,1);
-            // cout << "[LF 605] -- least square success " << endl;
-            //std::cout<<m_least.a<<" "<<m_least.b<<" "<<m_least.c<<std::endl;
-            if(detectline(i,params_.seed_line_points))
-            {
-                // cout << "[LF 605] -- before region grow " << endl;
-                line_include = detectfulline(i);
-                // cout << "[LF 605] -- after region grow " << endl;
+//         for(unsigned int i = 0; i < (m_valid_index.size() - params_.min_line_points) ;i++)
+//         {
+//             // cout << "[LF 619] -- before least square" << endl; 
+//             m_least = leastsquare(i,i + params_.seed_line_points - 1,1);
+//             // cout << "[LF 605] -- least square success " << endl;
+//             //std::cout<<m_least.a<<" "<<m_least.b<<" "<<m_least.c<<std::endl;
+//             if(detectline(i,params_.seed_line_points))
+//             {
+//                 // cout << "[LF 605] -- before region grow " << endl;
+//                 line_include = detectfulline(i);
+//                 // cout << "[LF 605] -- after region grow " << endl;
 
-                i = line_include;
-            }
+//                 i = line_include;
+//             }
 
-        }
-        // cout << "[LF 613] ---before cleanline " << endl;
+//         }
+//         // cout << "[LF 613] ---before cleanline " << endl;
 
-        cleanline();
+//         cleanline();
 
-        for(int p = 0; p < m_line.size();p++)
-        {
-            if(!delete_short_line(m_valid_index[m_line[p].left],m_valid_index[m_line[p].right]))
-            {
-                m_line.erase(m_line.begin()+p);
-            }
-        }
+//         for(int p = 0; p < m_line.size();p++)
+//         {
+//             if(!delete_short_line(m_valid_index[m_line[p].left],m_valid_index[m_line[p].right]))
+//             {
+//                 m_line.erase(m_line.begin()+p);
+//             }
+//         }
 
-        // MergeHeadTailLines(m_line);
+//         // MergeHeadTailLines(m_line);
         
-        generate(temp_line2);
+//         generate(temp_line2);
 
-        // delete radial lines.
-        for(int p = 0; p < m_line.size();p++)
-        {
-            if(delete_shadow_line(m_line[p]))
-            {
-                m_line.erase(m_line.begin()+p);
-                temp_line2.erase(temp_line2.begin()+p);
-            }
-        }        
+//         // delete radial lines.
+//         for(int p = 0; p < m_line.size();p++)
+//         {
+//             if(delete_shadow_line(m_line[p]))
+//             {
+//                 m_line.erase(m_line.begin()+p);
+//                 temp_line2.erase(temp_line2.begin()+p);
+//             }
+//         }        
 
-        temp_line1 = m_line;
-    }
+//         temp_line1 = m_line;
+//     }
 
-    void LineFeature::generate(std::vector<gline3d>& temp_line2, int laser_idx)
-    {
-        gline3d line_temp;
-        std::vector<gline3d> output;
-        POINT endpoint1;
-        POINT endpoint2;
-        int m = 0,n = 0;
-        double k1 = 0,k2 = 0;
-        for(int i = 0;i < m_line.size();i++)
-        {   
-            // if(m_line[i].left >= m_valid_index.size() || m_line[i].right >= m_valid_index.size()) {
-            //     cout << "line segment range i: " << i << ", left: " << m_line[i].left << ", right: " << m_line[i].right << endl;
-            // }
-            m = m_valid_index[m_line[i].left];
-            n = m_valid_index[m_line[i].right];
+    // void LineFeature::generate(std::vector<gline3d>& temp_line2, int laser_idx)
+    // {
+    //     gline3d line_temp;
+    //     std::vector<gline3d> output;
+    //     POINT endpoint1;
+    //     POINT endpoint2;
+    //     int m = 0,n = 0;
+    //     double k1 = 0,k2 = 0;
+    //     for(int i = 0;i < m_line.size();i++)
+    //     {   
+    //         // if(m_line[i].left >= m_valid_index.size() || m_line[i].right >= m_valid_index.size()) {
+    //         //     cout << "line segment range i: " << i << ", left: " << m_line[i].left << ", right: " << m_line[i].right << endl;
+    //         // }
+    //         m = m_valid_index[m_line[i].left];
+    //         n = m_valid_index[m_line[i].right];
 
-            // find middle of valid points.
-            int mid_idx = (m_line[i].left + m_line[i].right)/2;
-            int valid_mid_pt_idx = m_valid_index[mid_idx];
-            m_line[i].pm.x = range_data_.xs[valid_mid_pt_idx];
-            m_line[i].pm.y = range_data_.ys[valid_mid_pt_idx];
-            m_line[i].zm = range_data_.zs[valid_mid_pt_idx];
+    //         // find middle of valid points.
+    //         int mid_idx = (m_line[i].left + m_line[i].right)/2;
+    //         int valid_mid_pt_idx = m_valid_index[mid_idx];
+    //         m_line[i].pm.x = range_data_.xs[valid_mid_pt_idx];
+    //         m_line[i].pm.y = range_data_.ys[valid_mid_pt_idx];
+    //         m_line[i].zm = range_data_.zs[valid_mid_pt_idx];
 
 
-            // if(std::isnan(m_line[i].pm.x) || std::isnan(m_line[i].pm.y) || std::isnan(m_line[i].zm)) {
-            //     cout << "invalid middle points at line [" << i << "]" << endl;
-            //     cout <<m_line[i].pm.x << ", "
-            //         << m_line[i].pm.y << ", "
-            //         << m_line[i].zm << endl;
-            // }
+    //         // if(std::isnan(m_line[i].pm.x) || std::isnan(m_line[i].pm.y) || std::isnan(m_line[i].zm)) {
+    //         //     cout << "invalid middle points at line [" << i << "]" << endl;
+    //         //     cout <<m_line[i].pm.x << ", "
+    //         //         << m_line[i].pm.y << ", "
+    //         //         << m_line[i].zm << endl;
+    //         // }
 
-            m_line[i].left = m;
-            m_line[i].right = n;
-            m_line[i].laserIdx = laser_idx;
+    //         m_line[i].left = m;
+    //         m_line[i].right = n;
+    //         m_line[i].laserIdx = laser_idx;
 
-            // cout << "line idx range [m,n]: " << m << ", " << n << endl;
-            // if( m > n)
-            //     cout << "descending line occured ....." << endl;
-            calcVarianceOfFittedLine(m_line[i], m, n);
+    //         // cout << "line idx range [m,n]: " << m << ", " << n << endl;
+    //         // if( m > n)
+    //         //     cout << "descending line occured ....." << endl;
+    //         calcVarianceOfFittedLine(m_line[i], m, n);
 
-            if(m_line[i].b!=0)
-            {
-                endpoint1.x = (range_data_.xs[m]/m_line[i].a + range_data_.ys[m] - m_line[i].c)/(m_line[i].a + 1.0/(m_line[i].a));
-                endpoint1.y = m_line[i].a*endpoint1.x + m_line[i].c;
-            }
-            else
-            {
-                endpoint1.x = range_data_.ys[m];
-                endpoint1.y = m_line[i].c/m_line[i].a;
-            }
+    //         if(m_line[i].b!=0)
+    //         {
+    //             endpoint1.x = (range_data_.xs[m]/m_line[i].a + range_data_.ys[m] - m_line[i].c)/(m_line[i].a + 1.0/(m_line[i].a));
+    //             endpoint1.y = m_line[i].a*endpoint1.x + m_line[i].c;
+    //         }
+    //         else
+    //         {
+    //             endpoint1.x = range_data_.ys[m];
+    //             endpoint1.y = m_line[i].c/m_line[i].a;
+    //         }
 
-            line_temp.x1 = endpoint1.x;
-            line_temp.y1 = endpoint1.y;
-            line_temp.z1 = range_data_.zs[m];
+    //         line_temp.x1 = endpoint1.x;
+    //         line_temp.y1 = endpoint1.y;
+    //         line_temp.z1 = range_data_.zs[m];
 
-            m_line[i].p1 = endpoint1;
-            m_line[i].z1 = range_data_.zs[m];
+    //         m_line[i].p1 = endpoint1;
+    //         m_line[i].z1 = range_data_.zs[m];
 
-            if(m_line[i].b!=0)
-            {
-                endpoint2.x = (range_data_.xs[n]/m_line[i].a + range_data_.ys[n] - m_line[i].c)/(m_line[i].a + 1.0/(m_line[i].a));
-                endpoint2.y = m_line[i].a*endpoint2.x + m_line[i].c;
-            }
-            else
-            {
-                endpoint2.x = range_data_.ys[n];
-                endpoint2.y = m_line[i].c/m_line[i].a;
-            }
+    //         if(m_line[i].b!=0)
+    //         {
+    //             endpoint2.x = (range_data_.xs[n]/m_line[i].a + range_data_.ys[n] - m_line[i].c)/(m_line[i].a + 1.0/(m_line[i].a));
+    //             endpoint2.y = m_line[i].a*endpoint2.x + m_line[i].c;
+    //         }
+    //         else
+    //         {
+    //             endpoint2.x = range_data_.ys[n];
+    //             endpoint2.y = m_line[i].c/m_line[i].a;
+    //         }
 
-            line_temp.x2 = endpoint2.x;
-            line_temp.y2 = endpoint2.y;
-            line_temp.z2 = range_data_.zs[n];
+    //         line_temp.x2 = endpoint2.x;
+    //         line_temp.y2 = endpoint2.y;
+    //         line_temp.z2 = range_data_.zs[n];
 
-            m_line[i].p2 = endpoint2;
-            m_line[i].z2 = range_data_.zs[n];
+    //         m_line[i].p2 = endpoint2;
+    //         m_line[i].z2 = range_data_.zs[n];
 
-            m_line[i].len = distance_point(endpoint1.x, endpoint1.y, endpoint2.x, endpoint2.y);
+    //         m_line[i].len = distance_point(endpoint1.x, endpoint1.y, endpoint2.x, endpoint2.y);
 
-            // calculate vertical point, theta, distance.
-            double vp_x, vp_y, vp_theta, vp_dist;
-            vp_x = -m_line[i].a*m_line[i].c/(m_line[i].a*m_line[i].a + m_line[i].b*m_line[i].b);
-            vp_y = -m_line[i].b*m_line[i].c/(m_line[i].a*m_line[i].a + m_line[i].b*m_line[i].b);
-            vp_theta = std::atan2(vp_y, vp_x);
-            vp_dist = std::sqrt(vp_x*vp_x + vp_y*vp_y);
+    //         // calculate vertical point, theta, distance.
+    //         double vp_x, vp_y, vp_theta, vp_dist;
+    //         vp_x = -m_line[i].a*m_line[i].c/(m_line[i].a*m_line[i].a + m_line[i].b*m_line[i].b);
+    //         vp_y = -m_line[i].b*m_line[i].c/(m_line[i].a*m_line[i].a + m_line[i].b*m_line[i].b);
+    //         vp_theta = std::atan2(vp_y, vp_x);
+    //         vp_dist = std::sqrt(vp_x*vp_x + vp_y*vp_y);
 
-            m_line[i].theta = vp_theta;
-            m_line[i].vdist = vp_dist;
-            m_line[i].vp.x = vp_x;
-            m_line[i].vp.y = vp_y;
-            m_line[i].nvp.x = vp_x / vp_dist;
-            m_line[i].nvp.y = vp_y / vp_dist;
+    //         m_line[i].theta = vp_theta;
+    //         m_line[i].vdist = vp_dist;
+    //         m_line[i].vp.x = vp_x;
+    //         m_line[i].vp.y = vp_y;
+    //         m_line[i].nvp.x = vp_x / vp_dist;
+    //         m_line[i].nvp.y = vp_y / vp_dist;
 
-            output.push_back(line_temp);
-        }
-        temp_line2 = output;
-    }
+    //         output.push_back(line_temp);
+    //     }
+    //     temp_line2 = output;
+    // }
 
-    void LineFeature::extractLines(std::vector<line>& temp_line1,std::vector<gline3d>& temp_line2, int laser_idx)
-    {
-        int line_include = 0;
-        m_line.clear();
-        point_num_ = cs_data_.index;
+    // void LineFeature::extractLines(std::vector<line>& temp_line1,std::vector<gline3d>& temp_line2, int laser_idx)
+    // {
+    //     int line_include = 0;
+    //     m_line.clear();
+    //     point_num_ = cs_data_.index;
 
-        if(m_valid_index.size() < params_.min_line_points)
-        {
-            temp_line1.clear();
-            temp_line2.clear();
-            return;
-        }
-        //附近特征点数目
+    //     if(m_valid_index.size() < params_.min_line_points)
+    //     {
+    //         temp_line1.clear();
+    //         temp_line2.clear();
+    //         return;
+    //     }
+    //     //附近特征点数目
 
-        for(unsigned int i = 0; i < (m_valid_index.size() - params_.min_line_points) ;i++)
-        {
-            // cout << "[LF 619] -- before least square" << endl; 
-            m_least = leastsquare(i,i + params_.seed_line_points - 1,1);
-            // cout << "[LF 605] -- least square success " << endl;
-            //std::cout<<m_least.a<<" "<<m_least.b<<" "<<m_least.c<<std::endl;
-            if(detectline(i,params_.seed_line_points))
-            {
-                // cout << "[LF 605] -- before region grow " << endl;
-                line_include = detectfulline(i);
-                // cout << "[LF 605] -- after region grow " << endl;
+    //     for(unsigned int i = 0; i < (m_valid_index.size() - params_.min_line_points) ;i++)
+    //     {
+    //         // cout << "[LF 619] -- before least square" << endl; 
+    //         m_least = leastsquare(i,i + params_.seed_line_points - 1,1);
+    //         // cout << "[LF 605] -- least square success " << endl;
+    //         //std::cout<<m_least.a<<" "<<m_least.b<<" "<<m_least.c<<std::endl;
+    //         if(detectline(i,params_.seed_line_points))
+    //         {
+    //             // cout << "[LF 605] -- before region grow " << endl;
+    //             line_include = detectfulline(i);
+    //             // cout << "[LF 605] -- after region grow " << endl;
 
-                i = line_include;
-            }
+    //             i = line_include;
+    //         }
 
-        }
-        // cout << "[LF 613] ---before cleanline " << endl;
+    //     }
+    //     // cout << "[LF 613] ---before cleanline " << endl;
 
-        cleanline();
+    //     cleanline();
 
-        for(int p = 0; p < m_line.size();p++)
-        {
-            if(!delete_short_line(m_valid_index[m_line[p].left],m_valid_index[m_line[p].right]))
-            {
-                m_line.erase(m_line.begin()+p);
-            }
-        }
+    //     for(int p = 0; p < m_line.size();p++)
+    //     {
+    //         if(!delete_short_line(m_valid_index[m_line[p].left],m_valid_index[m_line[p].right]))
+    //         {
+    //             m_line.erase(m_line.begin()+p);
+    //         }
+    //     }
 
-        // MergeHeadTailLines(m_line);
+    //     // MergeHeadTailLines(m_line);
         
-        generate(temp_line2, laser_idx);
+    //     generate(temp_line2, laser_idx);
 
-        // delete radial lines.
-        for(int p = 0; p < m_line.size();p++)
-        {
-            if(delete_shadow_line(m_line[p]))
-            {
-                m_line.erase(m_line.begin()+p);
-                temp_line2.erase(temp_line2.begin()+p);
-            }
-        }        
+    //     // delete radial lines.
+    //     for(int p = 0; p < m_line.size();p++)
+    //     {
+    //         if(delete_shadow_line(m_line[p]))
+    //         {
+    //             m_line.erase(m_line.begin()+p);
+    //             temp_line2.erase(temp_line2.begin()+p);
+    //         }
+    //     }        
 
-        temp_line1 = m_line;
-    }
+    //     temp_line1 = m_line;
+    // }
 
 
     void LineFeature::extractLinesNew(std::vector<line>& temp_line1,std::vector<gline3d>& temp_line2, int laser_idx)
@@ -971,22 +929,14 @@ namespace line_feature
 
         for(unsigned int i = 0; i < (m_valid_index.size() - params_.seed_line_points) ;i++)
         {
-            // cout << "[LF 619] -- before least square" << endl; 
             m_least = leastsquare(i,i + params_.seed_line_points - 1,1);
-            // cout << "[LF 605] -- least square success " << endl;
-            // std::cout<<m_least.a<<" "<<m_least.b<<" "<<m_least.c<<std::endl;
-            if(detectline(i,params_.seed_line_points))
+            if(true) // if(detectline(i,params_.seed_line_points))
             {
-                // cout << "[LF 605] -- before region grow " << endl;
                 line_include = detectfulline(i);
-                // cout << "[LF 605] -- after region grow " << endl;
-
                 i = line_include;
             }
 
         }
-        // cout << "[LF 613] ---before cleanline " << endl;
-
         cleanline();
 
         for(int p = 0; p < m_line.size();p++)

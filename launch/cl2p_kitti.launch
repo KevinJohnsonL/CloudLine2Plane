@@ -3,10 +3,10 @@
   <node name="cloud2plane" pkg="cloudline2plane" type="cloudline2plane_kitti" output="screen">
     <param name="~lidar_name" value="HDL-64" />
     
-    <param name="~v_least_thresh" value="0.10" />
-    <param name="~v_min_line_length" value="0.12" />
-    <param name="~v_predict_distance" value="0.15" />
-    <param name="~v_seed_line_points" value="2" />
+    <param name="~v_least_thresh" value="0.075" />
+    <param name="~v_min_line_length" value="0.10" />
+    <param name="~v_predict_distance" value="0.12" />
+    <param name="~v_seed_line_points" value="3" />
     <param name="~v_min_line_points" value="4" />
     <param name="~v_pts_missing_tolerance" value="2"/>
     <param name="~v_max_pts_gap" value="1.0"/>
@@ -14,7 +14,7 @@
     <param name="~h_least_thresh" value="0.075" />
     <param name="~h_min_line_length" value="0.08" />
     <param name="~h_predict_distance" value="0.12" />
-    <param name="~h_seed_line_points" value="2" />
+    <param name="~h_seed_line_points" value="3" />
     <param name="~h_min_line_points" value="5" />
     <param name="~h_pts_missing_tolerance" value="2"/>
     <param name="~h_max_pts_gap" value="1.0"/>

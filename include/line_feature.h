@@ -49,11 +49,11 @@ namespace line_feature
         void calcVarianceOfFittedLine(line& l_param, int start_idx, int stop_idx);
 
         //返回直线分割结果
-        void extractLines(std::vector<line>&,std::vector<gline>&);
+       // void extractLines(std::vector<line>&,std::vector<gline>&);
 
         void extractLinesNew(std::vector<line>&,std::vector<gline3d>&, int);
 
-        void extractLines(std::vector<line>&,std::vector<gline3d>&, int laser_idx);
+        // void extractLines(std::vector<line>&,std::vector<gline3d>&, int laser_idx);
 
         //设置参数
         void set_angle_increment(double);
@@ -86,7 +86,7 @@ namespace line_feature
         //通过激光数据的首末索引值进行直线方程的求解
         least leastsquare(int,int,int);
         //检测种子直线
-        bool detectline(const int,const int);
+        // bool detectline(const int,const int);
         //通过种子直线，复原出整条直线，并进行最后的求定
         int detectfulline(const int);
         //整理整条直线
@@ -94,9 +94,9 @@ namespace line_feature
         //删除小于长度阈值的线段
         bool delete_short_line(const int,const int);
         //
-        void generate(std::vector<gline>& temp_line2);
+        // void generate(std::vector<gline>& temp_line2);
 
-        void generate(std::vector<gline3d>& temp_line2, int laser_idx);
+       //  void generate(std::vector<gline3d>& temp_line2, int laser_idx);
 
         void generateNew(std::vector<gline3d>& temp_line2, int laser_idx);
 

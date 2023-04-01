@@ -237,12 +237,16 @@ int main(int argc, char * argv[]) {
     nh_local.param<double>("v_predict_distance", v_predict_distance, 0.12);
     nh_local.param<int>("v_seed_line_points", v_seed_line_points, 2);
     nh_local.param<int>("v_min_line_points", v_min_line_points, 4);
+    nh_local.param<int>("v_pts_missing_tolerance", v_pts_missing_tolerance, 2);
+    nh_local.param<float>("v_max_pts_gap", v_max_pts_gap, 1.0);
 
     nh_local.param<double>("h_least_thresh", h_least_thresh, 0.075);
     nh_local.param<double>("h_min_line_length", h_min_line_length, 0.08);
     nh_local.param<double>("h_predict_distance", h_predict_distance, 0.12);
     nh_local.param<int>("h_seed_line_points", h_seed_line_points, 2);
     nh_local.param<int>("h_min_line_points", h_min_line_points, 5);
+    nh_local.param<int>("h_pts_missing_tolerance", h_pts_missing_tolerance, 2);
+    nh_local.param<float>("h_max_pts_gap", h_max_pts_gap, 1.0);
 
     nh_local.param<float>("line_plane_distThreshold", line_plane_distThreshold, 0.085);
 
