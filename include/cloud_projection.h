@@ -53,7 +53,7 @@ public:
   		size_t bin_row = m_params.RowFromAngle(vangle);
   		size_t bin_col = m_params.ColFromAngle(hangle);
   		auto& current_written_range = m_range_image.at<float>(bin_row, bin_col);
-  		if(current_written_range > range && range>0.001) {
+  		if(current_written_range > range && range>3) {
   			current_written_range = range;
   			m_rxy_image.at<float>(bin_row, bin_col) = rxy;
   			m_x_image.at<float>(bin_row, bin_col) = pt.x;

@@ -594,7 +594,7 @@ namespace line_feature
         // double gap_len = l_t.len/ (l_t.right - l_t.left + 1);
         double dist = std::fabs(l_t.c/std::sqrt(l_t.b*l_t.b + l_t.a*l_t.a));
         // if(gap_len < 0.04) // two point gap len at most 0.1 m. if larger, delete 
-        if(dist < 0.2)
+        if(dist < 0.2) // dist < 0.2
         {
             // fprintf(stderr, "[LF-505] --- gap_len: %f \n", gap_len);
             return true;
