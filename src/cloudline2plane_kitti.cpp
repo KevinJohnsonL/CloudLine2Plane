@@ -27,11 +27,13 @@ image_transport::Publisher r_image_pub;
 image_transport::Publisher vl_image_pub;
 image_transport::Publisher hl_image_pub;
 image_transport::Publisher pl_image_pub;
+image_transport::Publisher grd_image_pub;
 
 TicToc timer;
 std::vector<double> times_vec;
 bool SaveResult = true;
 std::string config_file = "/home/lemon/plane_lcd/src/CloudLine2Plane/config/hdl64_real.yaml";
+// std::string config_file = "/home/lemon/plane_lcd/src/CloudLine2Plane/config/vlp16_real.yaml";
 std::string output_path = "/home/lemon/plane_lcd/data/kitti/"; 
 std::string prefix = "";
 SaveMultiPlanes* save_results_ptr = new SaveMultiPlanes(output_path, pe.proj_params()); 
@@ -60,6 +62,8 @@ void cloudMsgHandler(const sensor_msgs::PointCloud2::ConstPtr& laserCloudMsg){
     std::cout << "segmentation cost: " << time_eclipsed << " ms" << std::endl;
     times_vec.push_back(time_eclipsed);  
 
+    // timer.Tic();
+
     //intialize visualization images
     auto vsweep_lines = pe.getVSweepLines();
     auto hsweep_lines = pe.getHSweepLines();
@@ -71,6 +75,7 @@ void cloudMsgHandler(const sensor_msgs::PointCloud2::ConstPtr& laserCloudMsg){
     cv::Mat x_img = pe.xImage();
     cv::Mat y_img = pe.yImage();
     cv::Mat z_img = pe.zImage();
+    cv::Mat grd_img = pe.grdImage();
 
     std::vector<PlaneParams> pl_params_vec = pe.planeParamsVec();
     int nPlanesNum = pl_params_vec.size();
@@ -154,6 +159,23 @@ void cloudMsgHandler(const sensor_msgs::PointCloud2::ConstPtr& laserCloudMsg){
     cv::flip(plane_img, plane_img_vis, -1);
     pubCvMatMsg(pl_image_pub, plane_img_vis, "velodyne", laserCloudMsg->header.stamp);
     
+    //publish ground image
+    cv::Mat ground_img = cv::Mat::zeros(plabel_image.size(), CV_8UC3);
+    for(int i=0; i < plabel_image.rows; i++) {
+        for(int j=0; j < plabel_image.cols; j++) {
+            auto grdlabel = grd_img.at<uint16_t>(i,j);
+            if(grdlabel==0)     
+                continue; 
+            pcl::PointXYZ color;
+            color.x = 255;
+            color.y = 255;
+            color.z = 255;
+            ground_img.at<cv::Vec3b>(i, j) = cv::Vec3b(color.x, color.y, color.z);   
+        }
+    }
+    cv::Mat ground_img_vis;
+    cv::flip(ground_img, ground_img_vis, -1);
+    pubCvMatMsg(grd_image_pub, ground_img_vis, "velodyne", laserCloudMsg->header.stamp);
     //publish labeled plane pointcloud
     pcl::PointCloud<pcl::PointXYZRGB> color_cloud;
     for(int i=0; i < plabel_image.rows; i++) {
@@ -209,6 +231,8 @@ void cloudMsgHandler(const sensor_msgs::PointCloud2::ConstPtr& laserCloudMsg){
         saveTimesToFile(pathLeTimesFile, le_times);
         saveTimesToFile(pathPeTimesFile, pe_times);
     }
+    // time_eclipsed = timer.Toc();
+    // cout << "Visualization time costs: " << time_eclipsed << " ms" << endl;
 }
 
 int main(int argc, char * argv[]) {
@@ -229,7 +253,7 @@ int main(int argc, char * argv[]) {
     int v_pts_missing_tolerance, h_pts_missing_tolerance;
     float v_max_pts_gap, h_max_pts_gap;
 
-     nh_local.param<std::string>("lidar_name", lidar_name, "HDL-64");
+    nh_local.param<std::string>("lidar_name", lidar_name, "HDL-64");
 
     //param used by linefeature algorithm
     nh_local.param<double>("v_least_thresh", v_least_thresh, 0.075);
@@ -272,6 +296,7 @@ int main(int argc, char * argv[]) {
     vl_image_pub = it_.advertise("/vline_img", 1);
     hl_image_pub = it_.advertise("/hline_img", 1);
     pl_image_pub = it_.advertise("/plane_img", 1);
+    grd_image_pub  = it_.advertise("/ground_img", 1);
 
     ros::Rate r(100);
     while(ros::ok()) {

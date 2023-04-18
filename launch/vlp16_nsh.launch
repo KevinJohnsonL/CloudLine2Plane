@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find cloudline2plane)/rviz_cfg/vlp16.rviz" />
+  <node name="cloud2plane" pkg="cloudline2plane" type="cloudline2plane_kitti" output="screen" >
+ 
+  </node>
+
+</launch>

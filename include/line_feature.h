@@ -33,23 +33,25 @@ namespace line_feature
         void setCSDataIdx(const std::vector<unsigned int>&);
         
         //设置range，每次都需要传递range消息，在主入口函数的回调函数进行
-        void setRangeData(const std::vector<double>&);
+        // void setRangeData(const std::vector<double>&);
 
-        void setRangeData(const std::vector<double>& xs, 
-                          const std::vector<double>& ys);
+        // void setRangeData(const std::vector<double>& xs, 
+        //                   const std::vector<double>& ys);
 
-        void setRangeData(const std::vector<double>& xs, 
-                          const std::vector<double>& ys, 
-                          const std::vector<double>& zs);
+        // void setRangeData(const std::vector<double>& xs, 
+        //                   const std::vector<double>& ys, 
+        //                   const std::vector<double>& zs);
 
         void setRangeDataNew(const std::vector<double>& xs,
                              const std::vector<double>& ys,
-                             const std::vector<double>& rs);
+                             const std::vector<double>& rs, const std::vector<float>& gs);
 
         void calcVarianceOfFittedLine(line& l_param, int start_idx, int stop_idx);
 
         //返回直线分割结果
        // void extractLines(std::vector<line>&,std::vector<gline>&);
+
+
 
         void extractLinesNew(std::vector<line>&,std::vector<gline3d>&, int);
 
@@ -86,13 +88,15 @@ namespace line_feature
         //通过激光数据的首末索引值进行直线方程的求解
         least leastsquare(int,int,int);
         //检测种子直线
-        // bool detectline(const int,const int);
+        bool detectline(const int,const int);
         //通过种子直线，复原出整条直线，并进行最后的求定
         int detectfulline(const int);
         //整理整条直线
         void cleanline();
         //删除小于长度阈值的线段
         bool delete_short_line(const int,const int);
+
+        bool niceSeed(const int);
         //
         // void generate(std::vector<gline>& temp_line2);
 

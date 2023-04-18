@@ -116,6 +116,8 @@ void LineExtraction::extract(const CloudT::Ptr& cloud_in_ptr) {
 	timer.Tic();
     // m_proj_params.printLidarType();
     proj_ptr->InitFromPoints(*cloud_in_ptr);
+    // proj_ptr->LabelGroundPoints();
+    
 	double proj_time = timer.Toc();
 
     // for debug.
@@ -125,6 +127,7 @@ void LineExtraction::extract(const CloudT::Ptr& cloud_in_ptr) {
     m_z_image = proj_ptr->z_image();
 
     m_valid_image = proj_ptr->valid_image();
+    m_ground_image = proj_ptr->ground_image();
 
     // output: x_image, y_image, z_image, rxy_image, r_image.
 	
@@ -143,28 +146,29 @@ void LineExtraction::extract(const CloudT::Ptr& cloud_in_ptr) {
     lse_times.push_back(lse_time);
 }
 
-void LineExtraction::extractOrganizedCloud(const CloudT::Ptr& cloud_in_ptr, bool colwise)
-{
-    CloudProjection* proj_ptr = new CloudProjection(m_proj_params);	
+// void LineExtraction::extractOrganizedCloud(const CloudT::Ptr& cloud_in_ptr, bool colwise)
+// {
+//     CloudProjection* proj_ptr = new CloudProjection(m_proj_params);	
 
-    // m_proj_params.printLidarType();
-    proj_ptr->InitFromOrganizedPoints(*cloud_in_ptr, colwise);
+//     // m_proj_params.printLidarType();
+//     proj_ptr->InitFromOrganizedPoints(*cloud_in_ptr, colwise);
 
-    // for debug.
-    m_depth_image = proj_ptr->depth_image();
-    m_x_image = proj_ptr->x_image();
-    m_y_image = proj_ptr->y_image();
-    m_z_image = proj_ptr->z_image();
+//     // for debug.
+//     m_depth_image = proj_ptr->depth_image();
+//     m_x_image = proj_ptr->x_image();
+//     m_y_image = proj_ptr->y_image();
+//     m_z_image = proj_ptr->z_image();
 
-    m_valid_image = proj_ptr->valid_image();
-    // output: x_image, y_image, z_image, rxy_image, r_image.
+//     m_valid_image = proj_ptr->valid_image();
+//     m_ground_image = proj_ptr->ground_image();
+//     // output: x_image, y_image, z_image, rxy_image, r_image.
 
-    processVerticalScans(*proj_ptr);
-    processHorizontalScans(*proj_ptr);
+//     processVerticalScans(*proj_ptr);
+//     processHorizontalScans(*proj_ptr);
 
-    generateLineIdxImage(m_vsweep_lines, m_vl_image, true);
-    generateLineIdxImage(m_hsweep_lines, m_hl_image, false);    
-}
+//     generateLineIdxImage(m_vsweep_lines, m_vl_image, true);
+//     generateLineIdxImage(m_hsweep_lines, m_hl_image, false);    
+// }
 
 
 std::vector<std::vector<gline3d>> 
@@ -182,6 +186,7 @@ std::vector<std::vector<line>*>
   LineExtraction::getHSweepLinesPtr() { return m_hsweep_lines_ptr; }
 
 
+cv::Mat LineExtraction::getGroundImage() { return m_ground_image; }
 cv::Mat LineExtraction::getDepthImage() { return m_depth_image; }
 cv::Mat LineExtraction::getXImage() { return m_x_image; }
 cv::Mat LineExtraction::getYImage() { return m_y_image; }
@@ -203,12 +208,24 @@ std::vector<float> LineExtraction::getRowVecFromMat(const cv::Mat& mat, int r) {
     return std::vector<float>(row_vec.begin<float>(), row_vec.end<float>());
 }
 
+// void setGroundPointsInvalid(int line_idx, bool direction){
+//     if(direction){
+//         for(int j=0, j<m_vsweep_lines.size(); j++){
+//             if(m_ground_image<uint16_t>[j][line_idx]){
+                
+//             }
+//         }
+//     }
+
+// }
+
 void LineExtraction::processVerticalScans(const CloudProjection& cloud_proj) {
     const cv::Mat& r_image = cloud_proj.depth_image();
     const cv::Mat& rxy_image = cloud_proj.rxy_image();
     const cv::Mat& x_image = cloud_proj.x_image();
     const cv::Mat& y_image = cloud_proj.y_image();
     const cv::Mat& z_image = cloud_proj.z_image();
+    const cv::Mat& ground_image = cloud_proj.ground_image();
 
     const int col_size = cloud_proj.cols();
     
@@ -223,12 +240,13 @@ void LineExtraction::processVerticalScans(const CloudProjection& cloud_proj) {
     // process (rxy, z)
     // #pragma omp parallel for
     for(int i=0; i < col_size; i++) {
-        std::vector<float> col_xs, col_ys, col_zs, col_rs, col_rxys;
+        std::vector<float> col_xs, col_ys, col_zs, col_rs, col_rxys, col_gs;
         col_rs = getColumnVecFromMat(r_image, i);
         col_rxys = getColumnVecFromMat(rxy_image, i);
         col_xs = getColumnVecFromMat(x_image, i);
         col_ys = getColumnVecFromMat(y_image, i);
         col_zs = getColumnVecFromMat(z_image, i);
+        col_gs = getColumnVecFromMat(ground_image, i);
 
         // std::vector<double> col_xsd(col_xs.begin(), col_xs.end());
         // std::vector<double> col_ysd(col_ys.begin(), col_ys.end());
@@ -236,7 +254,7 @@ void LineExtraction::processVerticalScans(const CloudProjection& cloud_proj) {
         std::vector<double> col_rsd(col_rs.begin(), col_rs.end());
         std::vector<double> col_rxysd(col_rxys.begin(), col_rxys.end());
 
-        m_lf_vertical.setRangeDataNew(col_rxysd, col_zsd, col_rsd);
+        m_lf_vertical.setRangeDataNew(col_rxysd, col_zsd, col_rsd, col_gs);
 
         std::vector<line> lines;
         std::vector<gline3d> glines;
@@ -283,6 +301,7 @@ void LineExtraction::processHorizontalScans(const CloudProjection& cloud_proj) {
     const cv::Mat& x_image = cloud_proj.x_image();
     const cv::Mat& y_image = cloud_proj.y_image();
     const cv::Mat& z_image = cloud_proj.z_image();
+    const cv::Mat& ground_image = cloud_proj.ground_image();
 
     const int row_size = cloud_proj.rows();
     
@@ -296,17 +315,18 @@ void LineExtraction::processHorizontalScans(const CloudProjection& cloud_proj) {
     // process (x, y)
     // #pragma omp parallel for
     for(int i=0; i < row_size; i++) {
-        std::vector<float> row_xs, row_ys, row_zs, row_rxys;
+        std::vector<float> row_xs, row_ys, row_zs, row_rxys, row_gs;
         row_xs = getRowVecFromMat(x_image, i);
         row_ys = getRowVecFromMat(y_image, i);
         row_zs = getRowVecFromMat(z_image, i);
         row_rxys = getRowVecFromMat(rxy_image, i);
+        row_gs = getRowVecFromMat(ground_image, i);
 
         std::vector<double> row_xsd(row_xs.begin(), row_xs.end());
         std::vector<double> row_ysd(row_ys.begin(), row_ys.end());
         std::vector<double> row_rxysd(row_rxys.begin(), row_rxys.end());
 
-        m_lf_horizontal.setRangeDataNew(row_xsd, row_ysd, row_rxysd);
+        m_lf_horizontal.setRangeDataNew(row_xsd, row_ysd, row_rxysd, row_gs);
 
         std::vector<line> lines;
         std::vector<gline3d> glines;

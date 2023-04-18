@@ -58,92 +58,92 @@ void LineClustering::clearOutput() {
 	m_plane_params.clear();
 }
 
-void LineClustering::labelPlanes() {
-	m_label = 1;
-	if(m_proj_params.lidar_type() == ProjectionParams::LIDARType::eSEGCOMPPERCEPTRON) {
-		for(int row =0; row < m_proj_params.rows(); row ++) {
-		// for(int row =m_proj_params.rows()-1; row >= 0; row --) {
-			for(int col = 0; col < m_proj_params.cols(); col ++) {		
-				if(PlaneLabelAt(row, col)>0)
-					continue;
+// void LineClustering::labelPlanes() {
+// 	m_label = 1;
+// 	if(m_proj_params.lidar_type() == ProjectionParams::LIDARType::eSEGCOMPPERCEPTRON) {
+// 		for(int row =0; row < m_proj_params.rows(); row ++) {
+// 		// for(int row =m_proj_params.rows()-1; row >= 0; row --) {
+// 			for(int col = 0; col < m_proj_params.cols(); col ++) {		
+// 				if(PlaneLabelAt(row, col)>0)
+// 					continue;
 
-				PlaneParams plane_param;
-				if(detectPlaneSeedAt(row, col, plane_param)) {
+// 				PlaneParams plane_param;
+// 				if(detectPlaneSeedAt(row, col, plane_param)) {
                     
-					labelOnePlaneBFS(row, col, plane_param, m_label);
-					plane_param.m_plabel = m_label;
-					plane_param.m_vertical_pt = computeVerticalPoint(plane_param);
+// 					labelOnePlaneBFS(row, col, plane_param, m_label);
+// 					plane_param.m_plabel = m_label;
+// 					plane_param.m_vertical_pt = computeVerticalPoint(plane_param);
 
-					if(m_lineOnPlane_cnt>3) {
-						// findPlaneContourAndConvexHull(plane_param);
+// 					if(m_lineOnPlane_cnt>3) {
+// 						// findPlaneContourAndConvexHull(plane_param);
 
-						m_plane_params.push_back(plane_param);
-						m_label ++;
-					}
-					else { // clear plabel image with m_label.
-						resetPlaneLabelOf(plane_param, m_label);
-					}
-				}
-			}
-		}
-	}
-	else {
-		// for(int row =0; row < m_proj_params.rows(); row ++) {
-		for(int row =m_proj_params.rows()-1; row >= 0; row --) {
-			for(int col = 0; col < m_proj_params.cols(); col ++) {		
-				if(PlaneLabelAt(row, col)>0)
-					continue;
+// 						m_plane_params.push_back(plane_param);
+// 						m_label ++;
+// 					}
+// 					else { // clear plabel image with m_label.
+// 						resetPlaneLabelOf(plane_param, m_label);
+// 					}
+// 				}
+// 			}
+// 		}
+// 	}
+// 	else {
+// 		// for(int row =0; row < m_proj_params.rows(); row ++) {
+// 		for(int row =m_proj_params.rows()-1; row >= 0; row --) {
+// 			for(int col = 0; col < m_proj_params.cols(); col ++) {		
+// 				if(PlaneLabelAt(row, col)>0)
+// 					continue;
 
-				PlaneParams plane_param;
-				if(detectPlaneSeedAt(row, col, plane_param)) {
-					labelOnePlaneBFS(row, col, plane_param, m_label);
-					plane_param.m_plabel = m_label;
-					plane_param.m_vertical_pt = computeVerticalPoint(plane_param);
+// 				PlaneParams plane_param;
+// 				if(detectPlaneSeedAt(row, col, plane_param)) {
+// 					labelOnePlaneBFS(row, col, plane_param, m_label);
+// 					plane_param.m_plabel = m_label;
+// 					plane_param.m_vertical_pt = computeVerticalPoint(plane_param);
 
-					if(m_lineOnPlane_cnt>3) {
-						// findPlaneContourAndConvexHull(plane_param);
+// 					if(m_lineOnPlane_cnt>3) {
+// 						// findPlaneContourAndConvexHull(plane_param);
 
-						m_plane_params.push_back(plane_param);
-						m_label ++;
-					}
-					else { // clear plabel image with m_label.
-						resetPlaneLabelOf(plane_param, m_label);
-					}
-				}
-			}
-		}		
-	}
-}
+// 						m_plane_params.push_back(plane_param);
+// 						m_label ++;
+// 					}
+// 					else { // clear plabel image with m_label.
+// 						resetPlaneLabelOf(plane_param, m_label);
+// 					}
+// 				}
+// 			}
+// 		}		
+// 	}
+// }
 
-void LineClustering::detectSingleDirectionPlanes() {
+// void LineClustering::detectSingleDirectionPlanes() {
 
-	clearLineLabelImageFromPlaneLabel();
+// 	clearLineLabelImageFromPlaneLabel();
 
-	for(int row=0; row < m_proj_params.rows(); row++) {
-	// for(int row=m_proj_params.rows()-1; row >= 0; row--) {
-		for(int col=0; col < m_proj_params.cols(); col++) {
-			if(PlaneLabelAt(row, col)>0)
-				continue;
+// 	for(int row=0; row < m_proj_params.rows(); row++) {
+// 	// for(int row=m_proj_params.rows()-1; row >= 0; row--) {
+// 		for(int col=0; col < m_proj_params.cols(); col++) {
+// 			if(PlaneLabelAt(row, col)>0)
+// 				continue;
 
-			PlaneParams plane_param;
-			if(detectSDPlaneSeedAt(row, col, plane_param)) {
-				labelOneSDPlaneBFS(row, col, plane_param, m_label);
+// 			PlaneParams plane_param;
+// 			if(detectSDPlaneSeedAt(row, col, plane_param)) {
+// 				labelOneSDPlaneBFS(row, col, plane_param, m_label);
 
-				plane_param.m_vertical_pt = computeVerticalPoint(plane_param);
+// 				plane_param.m_vertical_pt = computeVerticalPoint(plane_param);
 
-				if(m_lineOnPlane_cnt>2) {
-					// findPlaneContourAndConvexHull(plane_param);
-					m_plane_params.push_back(plane_param);
-					m_label ++;						
-				} 
-				else { // clear plabel image with m_label.
-					resetPlaneLabelOf(plane_param, m_label);
-				}
-			}
-		}
-	}
+// 				if(m_lineOnPlane_cnt>2) {
+// 					// findPlaneContourAndConvexHull(plane_param);
+// 					m_plane_params.push_back(plane_param);
+// 					m_label ++;						
+// 				} 
+// 				else { // clear plabel image with m_label.
+// 					resetPlaneLabelOf(plane_param, m_label);
+// 				}
+// 			}
+// 		}
+// 	}
 
-}
+// }
 
 void LineClustering::labelPlanesTogether() {
 	m_label = 1;
@@ -162,8 +162,8 @@ void LineClustering::labelPlanesTogether() {
 				plane_param.m_plabel = m_label;
 				plane_param.m_vertical_pt = computeVerticalPoint(plane_param);
 
-				if(m_lineOnPlane_cnt>3) {
-					// findPlaneContourAndConvexHull(plane_param);
+				if(m_lineOnPlane_cnt>10) { // 3
+					findPlaneContourAndConvexHull(plane_param);
 
 					m_plane_params.push_back(plane_param);
 					m_label ++;
@@ -962,6 +962,7 @@ void LineClustering::labelOnePlaneTogetherBFS(int row,
 	m_pts_cov33.setZero();
 	m_pts_sum31.setZero();
 	m_lineOnPlane_cnt = 0;
+	m_pointOnPlane_cnt = 0;
 
 	std::vector<PixelCoord> vlinesegs_checked;
 	std::vector<PixelCoord> hlinesegs_checked;

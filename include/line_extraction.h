@@ -26,7 +26,7 @@ public:
 
     void initLF(const ProjectionParams& params);
     void extract(const CloudT::Ptr& cloud_in_ptr);
-    void extractOrganizedCloud(const CloudT::Ptr& cloud_in_ptr, bool colwise=true);
+    // void extractOrganizedCloud(const CloudT::Ptr& cloud_in_ptr, bool colwise=true);
 
     void setProjectionParams(const ProjectionParams& params);    
     void setVLFLeastThreshold(double val);
@@ -51,6 +51,7 @@ public:
 	cv::Mat getHLImage();
 	cv::Mat getValidImage();
 	cv::Mat getDepthImage();
+	cv::Mat getGroundImage();
     ProjectionParams getProjectionParams();
 	std::vector<std::vector<gline3d>> getVSweepGlines();
 	std::vector<std::vector<line>> getVSweepLines();
@@ -63,6 +64,7 @@ public:
 
     std::vector<float> getColumnVecFromMat(const cv::Mat& mat, int c);
 	std::vector<float> getRowVecFromMat(const cv::Mat& mat, int r);
+	// void setGroundPointsInvalid();
 	void processVerticalScans(const CloudProjection& cloud_proj);
 	void processHorizontalScans(const CloudProjection& cloud_proj);
 	void generateLineIdxImage(const std::vector<std::vector<line>>& sweep_lines, 
@@ -98,6 +100,7 @@ private:
 	cv::Mat m_hl_image;
 
 	cv::Mat m_valid_image;
+	cv::Mat m_ground_image;
 
 
 	std::vector<double> cpr_times;

@@ -41,6 +41,9 @@ public:
     m_index_image = -cv::Mat::ones(m_params.rows(),
                                         m_params.cols(),
                                         cv::DataType<int>::type);
+    m_ground_image = cv::Mat::zeros(m_params.rows(),
+                                        m_params.cols(),
+                                        cv::DataType<uint16_t>::type);
   }
 
   void InitFromPoints(const CloudT& points) {
@@ -65,8 +68,39 @@ public:
   	}
   }
 
+  // void LabelGroundPoints(){ 
+  //   int groundInd = m_params.rows() * 0.8;
+  //   for(size_t j=0; j < m_params.cols(); j++) {
+  //     for(size_t i=0; i < groundInd; i++) 
+  //     {
+  //         float diffRXY, diffZ, angle;
+  //         size_t k = i+1;
+  //         if(m_valid_image.at<uint16_t>(i, j) == 0) continue;
+  //         for(; k < groundInd; k++) { 
+  //           if(m_valid_image.at<uint16_t>(k, j) == 1) break;
+  //         }
+  //         // fprintf(stderr, "i: %d, k: %d, \n", i, k);
+  //         // diffRXY = m_rxy_image.at<float>(i, j) - m_rxy_image.at<float>(k, j);
+  //         diffRXY = sqrt(pow(m_x_image.at<float>(i, j) - m_x_image.at<float>(k, j), 2) + 
+  //                        pow(m_y_image.at<float>(i, j) - m_y_image.at<float>(k, j), 2));
+  //         diffZ = m_z_image.at<float>(i, j) - m_z_image.at<float>(k, j);
+  //         angle = atan2(diffZ, diffRXY) * 180 / M_PI;
+  //         fprintf(stderr, "diffRXY: %f, diffZ:%f, \n", diffRXY, diffZ);
+  //         fprintf(stderr, "angle: %f, \n", angle);
+  //         // fprintf(stderr, "angle: %f, \n", angle);
+  //         if(fabsf(angle) < 5 || fabsf(angle) > 175)
+  //           m_ground_image.at<uint16_t>(i, j) = 1;
+  //           m_ground_image.at<uint16_t>(k, j) = 1;
+  //         // float lidar_mount_height = 1.6;
+  //         // if(m_z_image.at<float>(i, j) < -lidar_mount_height) 
+  //         // // if(true)
+  //         //   m_ground_image.at<uint16_t>(i, j) = 1;
+  //     }
+  //   }
+  // }
+
   void InitFromOrganizedPoints(const CloudT& points, bool colwise=true) {
-  	fprintf(stderr, " Cloud size: %d, \n", points.size());
+  	// fprintf(stderr, " Cloud size: %d, \n", points.size());
   	for(int i=0; i < points.size(); i++) {
 
   		// float vangle = asin(pt.z / range);
@@ -152,6 +186,17 @@ public:
   	return m_index_image;
   }
 
+  cv::Mat& index_image() {
+  	return m_index_image;
+  }
+  const cv::Mat& ground_image() const {
+  	return m_ground_image;
+  }
+
+  cv::Mat& ground_image() {
+  	return m_ground_image;
+  }
+
 
   inline size_t rows() const { return m_params.rows(); }
   inline size_t cols() const { return m_params.cols(); }
@@ -171,6 +216,7 @@ private:
 
   cv::Mat m_valid_image;
   cv::Mat m_index_image;
+  cv::Mat m_ground_image;
 };
 
 

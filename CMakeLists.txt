@@ -42,41 +42,41 @@ include_directories(include
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(cloudline2plane 
-src/cloudline2plane.cpp
-src/line_clustering.cpp
-src/line_extraction.cpp
-src/line_feature.cpp
-src/plane_extraction.cpp
-src/visualizer.cpp
-)
-target_link_libraries(cloudline2plane 
-${PCL_LIBRARIES} 
-${OpenCV_LIBRARIES}
-/usr/lib/x86_64-linux-gnu/libyaml-cpp.so)
+# add_executable(cloudline2plane 
+# src/cloudline2plane.cpp
+# src/line_clustering.cpp
+# src/line_extraction.cpp
+# src/line_feature.cpp
+# src/plane_extraction.cpp
+# src/visualizer.cpp
+# )
+# target_link_libraries(cloudline2plane 
+# ${PCL_LIBRARIES} 
+# ${OpenCV_LIBRARIES}
+# /usr/lib/x86_64-linux-gnu/libyaml-cpp.so)
 
 
-add_executable(cloudline2plane_proj 
-src/cloudline2plane_proj.cpp
-src/line_clustering.cpp
-src/line_extraction.cpp
-src/line_feature.cpp
-src/plane_extraction.cpp
-src/visualizer.cpp
-)
-target_link_libraries(cloudline2plane_proj 
-${PCL_LIBRARIES} 
-${OpenCV_LIBRARIES}
-/usr/lib/x86_64-linux-gnu/libyaml-cpp.so)
+# add_executable(cloudline2plane_proj 
+# src/cloudline2plane_proj.cpp
+# src/line_clustering.cpp
+# src/line_extraction.cpp
+# src/line_feature.cpp
+# src/plane_extraction.cpp
+# src/visualizer.cpp
+# )
+# target_link_libraries(cloudline2plane_proj 
+# ${PCL_LIBRARIES} 
+# ${OpenCV_LIBRARIES}
+# /usr/lib/x86_64-linux-gnu/libyaml-cpp.so)
 
-add_executable(visPlaneCloud
-src/visPlaneCloud.cpp
-src/visualizer.cpp
-)
-target_link_libraries(visPlaneCloud
-${PCL_LIBRARIES} 
-${OpenCV_LIBRARIES}
-)
+# add_executable(visPlaneCloud
+# src/visPlaneCloud.cpp
+# src/visualizer.cpp
+# )
+# target_link_libraries(visPlaneCloud
+# ${PCL_LIBRARIES} 
+# ${OpenCV_LIBRARIES}
+# )
 
 add_executable(cloudline2plane_kitti
 src/cloudline2plane_kitti.cpp

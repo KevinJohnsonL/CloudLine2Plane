@@ -13,7 +13,7 @@ public:
 
     void loadParams(std::string config_file);
 
-    void segment(const CloudT::Ptr& cloud_in_ptr, bool colwise=true);
+    // void segment(const CloudT::Ptr& cloud_in_ptr, bool colwise=true);
 
     void segment_unordered(const CloudT::Ptr& cloud_in_ptr, bool colwise=true);
 
@@ -25,6 +25,7 @@ public:
     cv::Mat xImage() {  return m_le.getXImage();   }
     cv::Mat yImage() {  return m_le.getYImage();  }
     cv::Mat zImage() {  return m_le.getZImage();   }
+    cv::Mat grdImage() {  return m_le.getGroundImage();   }
     
 
     std::vector<PlaneParams> planeParamsVec() { return m_pl_params_vec; }
@@ -60,6 +61,7 @@ public:
     cv::Mat m_x_image;
     cv::Mat m_y_image;
     cv::Mat m_z_image;
+    cv::Mat m_grd_image;
 
     std::vector<PlaneParams> m_pl_params_vec;
 

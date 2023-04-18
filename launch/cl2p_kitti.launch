@@ -1,25 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <launch>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find cloudline2plane)/rviz_cfg/lineclustering.rviz" />
   <node name="cloud2plane" pkg="cloudline2plane" type="cloudline2plane_kitti" output="screen">
-    <param name="~lidar_name" value="HDL-64" />
-    
-    <param name="~v_least_thresh" value="0.075" />
-    <param name="~v_min_line_length" value="0.10" />
-    <param name="~v_predict_distance" value="0.12" />
-    <param name="~v_seed_line_points" value="3" />
-    <param name="~v_min_line_points" value="4" />
-    <param name="~v_pts_missing_tolerance" value="2"/>
-    <param name="~v_max_pts_gap" value="1.0"/>
+  <remap from="/velodyne_points" to="/patchwork/non_ground" />
+  <!-- <param name="~lidar_name" value="HDL-64" />
+  
+  <param name="~v_least_thresh" value="0.05" />
+  <param name="~v_min_line_length" value="1.50" />
+  <param name="~v_predict_distance" value="0.10" />
+  <param name="~v_seed_line_points" value="5" />
+  <param name="~v_min_line_points" value="10" />
+  <param name="~v_pts_missing_tolerance" value="2"/>
+  <param name="~v_max_pts_gap" value="20.0"/>
 
-    <param name="~h_least_thresh" value="0.075" />
-    <param name="~h_min_line_length" value="0.08" />
-    <param name="~h_predict_distance" value="0.12" />
-    <param name="~h_seed_line_points" value="3" />
-    <param name="~h_min_line_points" value="5" />
-    <param name="~h_pts_missing_tolerance" value="2"/>
-    <param name="~h_max_pts_gap" value="1.0"/>
+  <param name="~h_least_thresh" value="0.05" />
+  <param name="~h_min_line_length" value="1.50" />
+    <param name="~h_predict_distance" value="0.10" />
+  <param name="~h_seed_line_points" value="10" />
+  <param name="~h_min_line_points" value="20" />
+  <param name="~h_pts_missing_tolerance" value="5"/>
+  <param name="~h_max_pts_gap" value="20.0"/>
 
-    <param name="~line_plane_distThreshold" value="0.12" />
+  <param name="~line_plane_distThreshold" value="0.05" /> -->
 
   </node>
 

@@ -42,9 +42,9 @@ public:
 
 	void clearOutput();
 
-	void labelPlanes();
+	// void labelPlanes();
 
-	void detectSingleDirectionPlanes();
+	// void detectSingleDirectionPlanes();
 
 	// labelPlanes and detectsingledirectionplanes together.
 	void labelPlanesTogether();
@@ -229,6 +229,7 @@ private:
 	Eigen::Matrix3f m_pts_cov33;
 	Eigen::Vector3f m_pts_sum31;
 	int m_lineOnPlane_cnt;
+	int m_pointOnPlane_cnt;
 
 	uint16_t m_label = 0;
 

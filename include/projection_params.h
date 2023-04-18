@@ -325,7 +325,7 @@ public:
   	auto params = ProjectionParams();
   	float h_min_ang = -180;
   	float h_max_ang = 180;
-  	int num_hbeam = 870;
+  	int num_hbeam = 870; //870
   	float h_angle_gap = (h_max_ang - h_min_ang) / (num_hbeam -1);
   	params.setScan(ScanParams(h_min_ang+h_angle_gap/2, h_max_ang-h_angle_gap/2, num_hbeam),
   				   ScanParams::Direction::HORIZONTAL);

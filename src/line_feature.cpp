@@ -91,90 +91,91 @@ namespace line_feature
 
 
 //设定激光点信息
-    void LineFeature::setRangeData(const std::vector<double>& ranges)
-    {
-        range_data_.ranges = ranges;
-        range_data_.xs.clear();
-        range_data_.ys.clear();
-        m_valid_index.clear();
-        int i=0;
-        for (std::vector<unsigned int>::const_iterator cit = cs_data_.index.begin();
-             cit != cs_data_.index.end(); ++cit)
-        {
-            if(ranges[*cit] <0.001 || ranges[*cit] > 80.0) {
-                range_data_.xs.push_back(0);
-                range_data_.ys.push_back(0);
-                i++;
-                continue;
-            }
-            if(std::isnan(ranges[*cit])) {
-                // fprintf(stderr, "[LF-91] `````` invalid laser points occured\n");
-            }
-            else {
-                m_valid_index.push_back(i);
-            }
-            i++;
-            range_data_.xs.push_back(cs_data_.cos_value[*cit] * ranges[*cit]);
-            range_data_.ys.push_back(cs_data_.sin_value[*cit] * ranges[*cit]);
-        }
-    }
+    // void LineFeature::setRangeData(const std::vector<double>& ranges)
+    // {
+    //     range_data_.ranges = ranges;
+    //     range_data_.xs.clear();
+    //     range_data_.ys.clear();
+    //     m_valid_index.clear();
+    //     int i=0;
+    //     for (std::vector<unsigned int>::const_iterator cit = cs_data_.index.begin();
+    //          cit != cs_data_.index.end(); ++cit)
+    //     {
+    //         if(ranges[*cit] <0.001 || ranges[*cit] > 80.0) {
+    //             range_data_.xs.push_back(0);
+    //             range_data_.ys.push_back(0);
+    //             i++;
+    //             continue;
+    //         }
+    //         if(std::isnan(ranges[*cit])) {
+    //             // fprintf(stderr, "[LF-91] `````` invalid laser points occured\n");
+    //         }
+    //         else {
+    //             m_valid_index.push_back(i);
+    //         }
+    //         i++;
+    //         range_data_.xs.push_back(cs_data_.cos_value[*cit] * ranges[*cit]);
+    //         range_data_.ys.push_back(cs_data_.sin_value[*cit] * ranges[*cit]);
+    //     }
+    // }
 
-    void LineFeature::setRangeData(const std::vector<double>& xs, const std::vector<double>& ys) {
+    // void LineFeature::setRangeData(const std::vector<double>& xs, const std::vector<double>& ys) {
 
-        range_data_.xs = xs;
-        range_data_.ys = ys;
-        range_data_.ranges.clear();
-        m_valid_index.clear();
-        for(int i =0; i < xs.size(); i++) {
-            double rd = sqrt(xs[i]*xs[i] + ys[i]*ys[i]);
-            if(rd < 0.001 || rd > 80.0) {
-                range_data_.ranges.push_back(rd);
-                continue;
-            }
+    //     range_data_.xs = xs;
+    //     range_data_.ys = ys;
+    //     range_data_.ranges.clear();
+    //     m_valid_index.clear();
+    //     for(int i =0; i < xs.size(); i++) {
+    //         double rd = sqrt(xs[i]*xs[i] + ys[i]*ys[i]);
+    //         if(rd < 0.001 || rd > 80.0) {
+    //             range_data_.ranges.push_back(rd);
+    //             continue;
+    //         }
 
-            if(std::isnan(xs[i]) || std::isnan(ys[i]))
-            {
-                // fprintf(stderr, "[LF-106]+++++++ invalid points occured at idx: %d\n", i);
-            }
-            else {
-                m_valid_index.push_back(i);
-            }
-            // TODO: handle invalid points.
-            range_data_.ranges.push_back(rd);
-        }
-    }
+    //         if(std::isnan(xs[i]) || std::isnan(ys[i]))
+    //         {
+    //             // fprintf(stderr, "[LF-106]+++++++ invalid points occured at idx: %d\n", i);
+    //         }
+    //         else {
+    //             m_valid_index.push_back(i);
+    //         }
+    //         // TODO: handle invalid points.
+    //         range_data_.ranges.push_back(rd);
+    //     }
+    // }
 
-    void LineFeature::setRangeData(const std::vector<double>& xs, 
-                                   const std::vector<double>& ys,
-                                   const std::vector<double>& zs) {
+    // void LineFeature::setRangeData(const std::vector<double>& xs, 
+    //                                const std::vector<double>& ys,
+    //                                const std::vector<double>& zs) {
 
-        range_data_.xs = xs;
-        range_data_.ys = ys;
-        range_data_.zs = zs;
-        range_data_.ranges.clear();
-        m_valid_index.clear();
-        for(int i =0; i < xs.size(); i++) {
-            double rd = sqrt(xs[i]*xs[i] + ys[i]*ys[i]);
-            if(rd < 0.001 || rd > 80.0) {
-                range_data_.ranges.push_back(rd);
-                continue;
-            }
+    //     range_data_.xs = xs;
+    //     range_data_.ys = ys;
+    //     range_data_.zs = zs;
+    //     range_data_.ranges.clear();
+    //     m_valid_index.clear();
+    //     for(int i =0; i < xs.size(); i++) {
+    //         double rd = sqrt(xs[i]*xs[i] + ys[i]*ys[i]);
+    //         if(rd < 0.001 || rd > 80.0) {
+    //             range_data_.ranges.push_back(rd);
+    //             continue;
+    //         }
 
-            if(std::isnan(xs[i]) || std::isnan(ys[i]) || std::isnan(zs[i]))
-            {
-                // fprintf(stderr, "[LF-106]+++++++ invalid points occured at idx: %d\n", i);
-            }
-            else {
-                m_valid_index.push_back(i);
-            }
-            // TODO: handle invalid points.
-            range_data_.ranges.push_back(rd);
-        }
-    }
+    //         if(std::isnan(xs[i]) || std::isnan(ys[i]) || std::isnan(zs[i]))
+    //         {
+    //             // fprintf(stderr, "[LF-106]+++++++ invalid points occured at idx: %d\n", i);
+    //         }
+    //         else {
+    //             m_valid_index.push_back(i);
+    //         }
+    //         // TODO: handle invalid points.
+    //         range_data_.ranges.push_back(rd);
+    //     }
+    // }
 
     void LineFeature::setRangeDataNew(const std::vector<double>& xs,
                                       const std::vector<double>& ys,
-                                      const std::vector<double>& rs) {
+                                      const std::vector<double>& rs,
+                                      const std::vector<float>& gs) {
         range_data_.xs = xs;
         range_data_.ys = ys;
         range_data_.ranges = rs;
@@ -268,94 +269,95 @@ namespace line_feature
     }
 
 //判断下一个点是否在直线上，是，返回true；否则，返回false。
-    // bool LineFeature::detectline(const int start,const int num)
-    // {
+    bool LineFeature::detectline(const int start,const int num)
+    {
 
-    //     bool flag = false;
-    //     //定义点到直线的垂直误差
-    //     double error1 = 0;
-    //     //定义下一点到预测位置的误差
-    //     double error2 = 0;
-    //     int i = 0;
-    //     int k = 0;
-    //     //预测下一点位置
-    //     POINT m_pn;
-    //     m_pn.x = 0;
-    //     m_pn.y = 0;
-    //     //下一点，y = kp*x;
-    //     double kp = 0;
-    //     double theta = 0;
-    //     // cout << "start:" << start << ", num:" << num << endl;
-    //     // cout << "valid point num: " << m_valid_index.size() << endl;
-    //     for(i = start;i < start+num;i++)
-    //     {
-    //         // cout << "i:" << i << "raw idx:" << m_valid_index[i] << endl;
-    //         // if(i >= m_valid_index.size()) {
-    //         //     cout << "i: " << i << " vs: " << m_valid_index.size() << endl;
-    //         // }
-    //         k = m_valid_index[i];
-    //         // if( k >= 1800)
-    //         // {
-    //         //     cout << "k: " << k << endl;
-    //         // }
+        bool flag = false;
+        //定义点到直线的垂直误差
+        double error1 = 0;
+        //定义下一点到预测位置的误差
+        double error2 = 0;
+        int i = 0;
+        int k = 0;
+        //预测下一点位置
+        POINT m_pn;
+        m_pn.x = 0;
+        m_pn.y = 0;
+        //下一点，y = kp*x;
+        double kp = 0;
+        double theta = 0;
+        // cout << "start:" << start << ", num:" << num << endl;
+        // cout << "valid point num: " << m_valid_index.size() << endl;
+        for(i = start;i < start+num;i++)
+        {
+            // cout << "i:" << i << "raw idx:" << m_valid_index[i] << endl;
+            // if(i >= m_valid_index.size()) {
+            //     cout << "i: " << i << " vs: " << m_valid_index.size() << endl;
+            // }
+            k = m_valid_index[i];
+            // if( k >= 1800)
+            // {
+            //     cout << "k: " << k << endl;
+            // }
 
-    //         // 10 degrees. 2.5*10 = 25, 5 degs, 12.5 pts.
-    //         double r1 = range_data_.ranges[k];
-    //         if(i>=1 && 
-    //             (k - m_valid_index[i-1]>params_.pts_missing_tolerance ||
-    //              std::fabs(r1 - range_data_.ranges[m_valid_index[i-1]]) > params_.max_pts_gap) )
-    //         {
-    //             flag = true;
-    //             break;
-    //         } 
+            // 10 degrees. 2.5*10 = 25, 5 degs, 12.5 pts.
+            double r1 = range_data_.ranges[k];
+            if(i>=1 && 
+                (k - m_valid_index[i-1]>params_.pts_missing_tolerance ||
+                 std::fabs(r1 - range_data_.ranges[m_valid_index[i-1]]) > params_.max_pts_gap) )
+            {
+                flag = true;
+                break;
+            } 
 
-    //         // cout << i << ": before perpendicular distance " << endl;
-    //         //到直线的垂直距离
-    //         // error1 = fabs(((m_least.a)*range_data_.xs[k]+(m_least.b)*range_data_.ys[k]+m_least.c))/sqrt((1+(m_least.a)*(m_least.a)));
-    //         error1 = fabs(((m_least.a)*range_data_.xs[k]+(m_least.b)*range_data_.ys[k]+m_least.c))/sqrt(((m_least.b)*(m_least.b)+(m_least.a)*(m_least.a)));
+            // cout << i << ": before perpendicular distance " << endl;
+            //到直线的垂直距离
+            // error1 = fabs(((m_least.a)*range_data_.xs[k]+(m_least.b)*range_data_.ys[k]+m_least.c))/sqrt((1+(m_least.a)*(m_least.a)));
+            error1 = fabs(((m_least.a)*range_data_.xs[k]+(m_least.b)*range_data_.ys[k]+m_least.c))/sqrt(((m_least.b)*(m_least.b)+(m_least.a)*(m_least.a)));
 
-    //         if(error1 > params_.least_thresh)
-    //         {
-    //             flag = true;
-    //             break;
-    //         }
+            if(error1 > params_.least_thresh)
+            {
+                flag = true;
+                break;
+            }
 
-    //         theta = params_.angle_increment*k + params_.angle_start;
-    //         if(fabs((fabs(theta) - PI/2))<1e-05)
-    //         {
-    //             m_pn.x = 0;
-    //             m_pn.y = m_least.c;
-    //         }
-    //         else
-    //         {
-    //             kp = tan(theta);
-    //             m_pn.x = (m_least.c)/(kp - m_least.a);
-    //             m_pn.y = kp*m_pn.x;
-    //         }
+            //角度估计不够准确，需要进行修正
+            // theta = params_.angle_increment*k + params_.angle_start;
+            // if(fabs((fabs(theta) - PI/2))<1e-05)
+            // {
+            //     m_pn.x = 0;
+            //     m_pn.y = m_least.c;
+            // }
+            // else
+            // {
+            //     kp = tan(theta);
+            //     m_pn.x = (m_least.c)/(kp - m_least.a);
+            //     m_pn.y = kp*m_pn.x;
+            // }
 
-    //         // cout << i << ": before distance_point " << endl;
+            // // cout << i << ": before distance_point " << endl;
 
-    //         //计算到预测点之间的误差
-    //         error2 = distance_point(range_data_.xs[k],range_data_.ys[k],m_pn.x,m_pn.y);
+            // //计算到预测点之间的误差
+            // error2 = distance_point(range_data_.xs[k],range_data_.ys[k],m_pn.x,m_pn.y);
             
-    //         // cout << i << ": after distance point" << error2 << endl;
-    //         if(error2 > params_.predict_distance)
-    //         {
-    //             flag = true;
-    //             break;
-    //         }
-    //         // cout << "for loop finished ..." << endl;
-    //         // cout << "-----------------------" << endl;
-    //     }
-    //     if(flag)
-    //     {
-    //         return false;
-    //     }
-    //     else
-    //     {
-    //         return true;
-    //     }
-    // }
+            // // cout << i << ": after distance point" << error2 << endl;
+            // if(error2 > params_.predict_distance)
+            // {
+            //     flag = true;
+            //     break;
+            // }
+            // cout << "for loop finished ..." << endl;
+            // cout << "-----------------------" << endl;
+        }
+        if(flag)
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
 
 //检测完整的直线段
     int LineFeature::detectfulline(const int start)
@@ -392,7 +394,7 @@ namespace line_feature
             if((fabs(a*range_data_.xs[idx]+b*range_data_.ys[idx]+c)/(sqrt(b*b+a*a)))<params_.least_thresh)
             {
                 m_least = leastsquare(start,n2,2);
-                if(n2 < (m_valid_index.size() - 1))
+                if(n2 <= (m_valid_index.size() - 1))
                 {
                     n2 = n2 + 1;
                     a = m_least.a;
@@ -412,9 +414,9 @@ namespace line_feature
                 flag2 = false;
             }
         }
-        // if(n2 < m_valid_index.size()-1) {
-        //     n2 = n2-1;
-        // }
+        if(n2 <= m_valid_index.size()) {
+            n2 = n2-1;
+        }
 
         //向后回溯
 
@@ -434,7 +436,7 @@ namespace line_feature
             if((fabs(a*range_data_.xs[idx]+b*range_data_.ys[idx]+c)/(sqrt(b*b+a*a)))<params_.least_thresh)            
             {
                 m_least = leastsquare(n1,n2,3);
-                if(n1>0)
+                if(n1>=0)
                 {
                     n1 = n1 - 1;
                     a = m_least.a;
@@ -444,6 +446,9 @@ namespace line_feature
                 else
                 {
                     flag1 = false;
+                    a = m_least.a;
+                    b = m_least.b;
+                    c = m_least.c;
                 }
             }
             else
@@ -451,7 +456,7 @@ namespace line_feature
                 flag1 = false;
             }
         }
-        //  n1 = n1+1;
+        n1 = n1+1;
 
         m_temp.left = n1;
         m_temp.right = n2;
@@ -507,8 +512,11 @@ namespace line_feature
                 n = m_line[q].left;
                 if(m >= n)
                 {
-                    theta_one_ = atan(m_line[p].a);
-                    theta_two_ = atan(m_line[q].a);
+                    // theta_one_ = atan(m_line[p].a);
+                    // theta_two_ = atan(m_line[q].a);
+
+                    theta_one_ = atan(m_line[p].b/m_line[p].a);
+                    theta_two_ = atan(m_line[q].b/m_line[q].a);
 
                     theta_d_ = fabs(theta_one_ - theta_two_);
 
@@ -912,6 +920,16 @@ namespace line_feature
     //     temp_line1 = m_line;
     // }
 
+    bool LineFeature::niceSeed(const int index){
+        for (unsigned int i = 0; i < params_.seed_line_points; i++)
+        {
+            int idx = m_valid_index[i];
+            if(fabs(m_least.a*range_data_.xs[idx]+m_least.b*range_data_.ys[idx]
+            +m_least.c)/(sqrt(m_least.b*m_least.b+m_least.a*m_least.a))>2*params_.least_thresh)
+            return false;
+        }
+        return true;
+    }
 
     void LineFeature::extractLinesNew(std::vector<line>& temp_line1,std::vector<gline3d>& temp_line2, int laser_idx)
     {
@@ -930,7 +948,7 @@ namespace line_feature
         for(unsigned int i = 0; i < (m_valid_index.size() - params_.seed_line_points) ;i++)
         {
             m_least = leastsquare(i,i + params_.seed_line_points - 1,1);
-            if(true) // if(detectline(i,params_.seed_line_points))
+            if(detectline(i,params_.seed_line_points)) // if(detectline(i,params_.seed_line_points))
             {
                 line_include = detectfulline(i);
                 i = line_include;

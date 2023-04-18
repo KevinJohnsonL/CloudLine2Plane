@@ -136,31 +136,31 @@ void PlaneExtraction::loadParams(std::string config_file) {
     m_lc.setLinePlaneDistThreshold(line_plane_distThreshold);    
 }
 
-void PlaneExtraction::segment(const CloudT::Ptr& cloud_in_ptr, bool colwise) {
+// void PlaneExtraction::segment(const CloudT::Ptr& cloud_in_ptr, bool colwise) {
 
-	// fprintf(stderr, " received frame: %d\n", m_frame_cnt ++);
+// 	// fprintf(stderr, " received frame: %d\n", m_frame_cnt ++);
 
-    // 1. extract line segments.
-	m_le.extractOrganizedCloud(cloud_in_ptr, colwise);
+//     // 1. extract line segments.
+// 	m_le.extractOrganizedCloud(cloud_in_ptr, colwise);
 
-    // output of line segments.
-    auto vsweep_lines = m_le.getVSweepLines();
-    auto hsweep_lines = m_le.getHSweepLines();
-    // auto vsweep_lines_ptr = m_le.getVSweepLinesPtr();
-    // auto hsweep_lines_ptr = m_le.getHSweepLinesPtr();    
-    auto hl_image = m_le.getHLImage();
-    auto vl_image = m_le.getVLImage();
-    auto valid_image = m_le.getValidImage();
+//     // output of line segments.
+//     auto vsweep_lines = m_le.getVSweepLines();
+//     auto hsweep_lines = m_le.getHSweepLines();
+//     // auto vsweep_lines_ptr = m_le.getVSweepLinesPtr();
+//     // auto hsweep_lines_ptr = m_le.getHSweepLinesPtr();    
+//     auto hl_image = m_le.getHLImage();
+//     auto vl_image = m_le.getVLImage();
+//     auto valid_image = m_le.getValidImage();
 
-    // 2.  cluster line segments.
-    // m_lc.run(hsweep_lines_ptr, vsweep_lines_ptr, hl_image, vl_image, valid_image);
-    m_lc.run(hsweep_lines, vsweep_lines, hl_image, vl_image, valid_image);
+//     // 2.  cluster line segments.
+//     // m_lc.run(hsweep_lines_ptr, vsweep_lines_ptr, hl_image, vl_image, valid_image);
+//     m_lc.run(hsweep_lines, vsweep_lines, hl_image, vl_image, valid_image);
 
-    // results.
-    m_plabel_image = m_lc.getPlaneLabelImage();
-    m_pl_params_vec = m_lc.getPlaneParamsVec();
+//     // results.
+//     m_plabel_image = m_lc.getPlaneLabelImage();
+//     m_pl_params_vec = m_lc.getPlaneParamsVec();
 
-}
+// }
 
 void PlaneExtraction::segment_unordered(const CloudT::Ptr& cloud_in_ptr, bool colwise) {
 
