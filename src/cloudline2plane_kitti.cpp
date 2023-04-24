@@ -13,6 +13,7 @@
 
 #include <chrono>
 #include <thread>
+#include <mutex>
 #include "visualizer.h"
 
 #include <pcl/filters/filter.h>
@@ -29,6 +30,10 @@ image_transport::Publisher hl_image_pub;
 image_transport::Publisher pl_image_pub;
 image_transport::Publisher grd_image_pub;
 
+std::queue<sensor_msgs::PointCloud2ConstPtr> pointCloudBuf;
+std::queue<sensor_msgs::PointCloud2ConstPtr> nonGroundCloudBuf;
+std::mutex mutex_lock;
+
 TicToc timer;
 std::vector<double> times_vec;
 bool SaveResult = true;
@@ -40,6 +45,20 @@ SaveMultiPlanes* save_results_ptr = new SaveMultiPlanes(output_path, pe.proj_par
 // save_results_ptr = new SaveMultiPlanes(output_path, pe.proj_params());  
 
 int frame_cnt = 0;
+
+void cloudMsgHandler(const sensor_msgs::PointCloud2::ConstPtr& laserCloudMsg)
+{
+    mutex_lock.lock();
+    pointCloudBuf.push(laserCloudMsg);
+    mutex_lock.unlock();
+}
+
+void nonGroundCloudMsgHandler(const sensor_msgs::PointCloud2::ConstPtr& laserCloudMsg)
+{
+    mutex_lock.lock();
+    nonGroundCloudBuf.push(laserCloudMsg);
+    mutex_lock.unlock();
+}
 
 CloudT rosCloudMsgToPCLCloud(const sensor_msgs::PointCloud2::ConstPtr& laserCloudMsg) {
     CloudT::Ptr laserCloudInRaw(new CloudT);
@@ -53,186 +72,201 @@ CloudT rosCloudMsgToPCLCloud(const sensor_msgs::PointCloud2::ConstPtr& laserClou
 }
 
 
-void cloudMsgHandler(const sensor_msgs::PointCloud2::ConstPtr& laserCloudMsg){
-    ROS_INFO(" received frame: %d", frame_cnt ++);
-    CloudT cloudIn = rosCloudMsgToPCLCloud(laserCloudMsg);
-    timer.Tic();
-    pe.segment_unordered(cloudIn.makeShared(), false);
-    double time_eclipsed = timer.Toc();
-    std::cout << "segmentation cost: " << time_eclipsed << " ms" << std::endl;
-    times_vec.push_back(time_eclipsed);  
+void PlaneSegmentationThread(){
+    while(1){
+        if(pointCloudBuf.empty() || nonGroundCloudBuf.empty()){
+            std::this_thread::sleep_for(std::chrono::milliseconds(2));
+            continue;
+        }else{
+            mutex_lock.lock();
+            sensor_msgs::PointCloud2ConstPtr laserCloudMsg = pointCloudBuf.front();
+            pointCloudBuf.pop();
+            sensor_msgs::PointCloud2ConstPtr nonGroundCloudMsg = nonGroundCloudBuf.front();
+            nonGroundCloudBuf.pop();
+            mutex_lock.unlock();
+        
+            ROS_INFO(" received frame: %d", frame_cnt ++);
+            CloudT nonGroundCloudIn = rosCloudMsgToPCLCloud(nonGroundCloudMsg);
+            CloudT cloudIn = rosCloudMsgToPCLCloud(laserCloudMsg);
+            timer.Tic();
+            pe.segment_unordered(cloudIn.makeShared(), false);
+            double time_eclipsed = timer.Toc();
+            std::cout << "segmentation cost: " << time_eclipsed << " ms" << std::endl;
+            times_vec.push_back(time_eclipsed);  
 
-    // timer.Tic();
+            // timer.Tic();
 
-    //intialize visualization images
-    auto vsweep_lines = pe.getVSweepLines();
-    auto hsweep_lines = pe.getHSweepLines();
-    auto hl_image = pe.getHLineImage();
-    auto vl_image = pe.getVLineImage();
+            //intialize visualization images
+            auto vsweep_lines = pe.getVSweepLines();
+            auto hsweep_lines = pe.getHSweepLines();
+            auto hl_image = pe.getHLineImage();
+            auto vl_image = pe.getVLineImage();
 
-    cv::Mat plabel_image = pe.labelImage();
-    cv::Mat range_img = pe.rangeImage();
-    cv::Mat x_img = pe.xImage();
-    cv::Mat y_img = pe.yImage();
-    cv::Mat z_img = pe.zImage();
-    cv::Mat grd_img = pe.grdImage();
+            cv::Mat plabel_image = pe.labelImage();
+            cv::Mat range_img = pe.rangeImage();
+            cv::Mat x_img = pe.xImage();
+            cv::Mat y_img = pe.yImage();
+            cv::Mat z_img = pe.zImage();
+            cv::Mat grd_img = pe.grdImage();
 
-    std::vector<PlaneParams> pl_params_vec = pe.planeParamsVec();
-    int nPlanesNum = pl_params_vec.size();
-    std::cout << "segmented plane num: " << nPlanesNum << std::endl;
+            std::vector<PlaneParams> pl_params_vec = pe.planeParamsVec();
+            int nPlanesNum = pl_params_vec.size();
+            std::cout << "segmented plane num: " << nPlanesNum << std::endl;
 
-    //publish range image
-     cv::Mat range_img_c = cv::Mat::zeros(range_img.size(), CV_8UC3);  
-	for(int r=0; r < range_img.rows; r++)
-		for(int c=0; c < range_img.cols; c++) {
-			float rd = range_img.at<float>(r,c);
-			if(rd < 0.001)
-				continue;
+            //publish range image
+            cv::Mat range_img_c = cv::Mat::zeros(range_img.size(), CV_8UC3);  
+            for(int r=0; r < range_img.rows; r++)
+                for(int c=0; c < range_img.cols; c++) {
+                    float rd = range_img.at<float>(r,c);
+                    if(rd < 0.001)
+                        continue;
 
-			int range = int(rd*255.0/7.0);
-            cv::Vec3b range_pix =  cv::Vec3b(range, range, range);
-            range_img_c.at<cv::Vec3b>(r, c) = range_pix;
-		}
+                    int range = int(rd*255.0/7.0);
+                    cv::Vec3b range_pix =  cv::Vec3b(range, range, range);
+                    range_img_c.at<cv::Vec3b>(r, c) = range_pix;
+                }
 
-	cv::Mat range_img_vis;
-    cv::flip(range_img_c, range_img_vis, -1);
-    pubCvMatMsg(r_image_pub, range_img_vis, "velodyne", laserCloudMsg->header.stamp);    
+            cv::Mat range_img_vis;
+            cv::flip(range_img_c, range_img_vis, -1);
+            pubCvMatMsg(r_image_pub, range_img_vis, "velodyne", laserCloudMsg->header.stamp);    
 
-    //publish line image
-    //vertical line image
-    cv::Mat lineseg_img = cv::Mat::zeros(range_img.size(), CV_8UC3);
-    for(int i=0; i < vsweep_lines.size(); i++ ) {
-    	std::vector<line> line_segs = vsweep_lines[i];
-    	for(int j=0; j < line_segs.size(); j++) {
-	        pcl::PointXYZ color;
-	        color.x = RANDOM_COLORS[j % 200][0];
-	        color.y = RANDOM_COLORS[j % 200][1];
-	        color.z = RANDOM_COLORS[j % 200][2]; 
-    		int start_idx = line_segs[j].left;
-    		int stop_idx = line_segs[j].right;
-    		for(int k=start_idx; k<=stop_idx; k++) {
-    			lineseg_img.at<cv::Vec3b>(k, i) = cv::Vec3b(color.x, color.y, color.z);
-    		}
-    	}
-    }
-    cv::Mat lineseg_img_vis;
-    cv::flip(lineseg_img, lineseg_img_vis, -1);
-    pubCvMatMsg(vl_image_pub, lineseg_img_vis, "velodyne", laserCloudMsg->header.stamp);    
-    
-    //horizatal line image
-     lineseg_img = cv::Mat::zeros(range_img.size(), CV_8UC3);
-    for(int i=0; i < hsweep_lines.size(); i++) {
-    	std::vector<line> line_segs = hsweep_lines[i]; 	
-    	for(int j=0; j < line_segs.size(); j++) {
-    		int start_idx = line_segs[j].left;
-    		int stop_idx = line_segs[j].right;
-	        pcl::PointXYZ color;
-	        color.x = RANDOM_COLORS[j % 200][0];
-	        color.y = RANDOM_COLORS[j % 200][1];
-	        color.z = RANDOM_COLORS[j % 200][2];       		
-    		for(int k=start_idx; k<=stop_idx; k++) {
-    			lineseg_img.at<cv::Vec3b>(i, k) = cv::Vec3b(color.x, color.y, color.z);
-    		}
-    	}    	
-    }
-	cv::flip(lineseg_img, lineseg_img_vis, -1);
-    pubCvMatMsg(hl_image_pub, lineseg_img_vis, "velodyne", laserCloudMsg->header.stamp);    
+            //publish line image
+            //vertical line image
+            cv::Mat lineseg_img = cv::Mat::zeros(range_img.size(), CV_8UC3);
+            for(int i=0; i < vsweep_lines.size(); i++ ) {
+                std::vector<line> line_segs = vsweep_lines[i];
+                for(int j=0; j < line_segs.size(); j++) {
+                    pcl::PointXYZ color;
+                    color.x = RANDOM_COLORS[j % 200][0];
+                    color.y = RANDOM_COLORS[j % 200][1];
+                    color.z = RANDOM_COLORS[j % 200][2]; 
+                    int start_idx = line_segs[j].left;
+                    int stop_idx = line_segs[j].right;
+                    for(int k=start_idx; k<=stop_idx; k++) {
+                        lineseg_img.at<cv::Vec3b>(k, i) = cv::Vec3b(color.x, color.y, color.z);
+                    }
+                }
+            }
+            cv::Mat lineseg_img_vis;
+            cv::flip(lineseg_img, lineseg_img_vis, -1);
+            pubCvMatMsg(vl_image_pub, lineseg_img_vis, "velodyne", laserCloudMsg->header.stamp);    
+            
+            //horizatal line image
+            lineseg_img = cv::Mat::zeros(range_img.size(), CV_8UC3);
+            for(int i=0; i < hsweep_lines.size(); i++) {
+                std::vector<line> line_segs = hsweep_lines[i]; 	
+                for(int j=0; j < line_segs.size(); j++) {
+                    int start_idx = line_segs[j].left;
+                    int stop_idx = line_segs[j].right;
+                    pcl::PointXYZ color;
+                    color.x = RANDOM_COLORS[j % 200][0];
+                    color.y = RANDOM_COLORS[j % 200][1];
+                    color.z = RANDOM_COLORS[j % 200][2];       		
+                    for(int k=start_idx; k<=stop_idx; k++) {
+                        lineseg_img.at<cv::Vec3b>(i, k) = cv::Vec3b(color.x, color.y, color.z);
+                    }
+                }    	
+            }
+            cv::flip(lineseg_img, lineseg_img_vis, -1);
+            pubCvMatMsg(hl_image_pub, lineseg_img_vis, "velodyne", laserCloudMsg->header.stamp);    
 
-    // publish plane label image
-    cv::Mat plane_img = cv::Mat::zeros(plabel_image.size(), CV_8UC3);
-    // std::map<int,int> labels_map;
-    // std::map<int, CloudT> planes_map;
-    // std::map<int, std::vector<double>> colors_map;
-    for(int i=0; i < plabel_image.rows; i++) {
-        for(int j=0; j < plabel_image.cols; j++) {
-            auto plabel = plabel_image.at<uint16_t>(i,j);
-            if(plabel==0)     
-                continue; 
-            pcl::PointXYZ color;
-            color.x = RANDOM_COLORS[plabel % 200][0];
-            color.y = RANDOM_COLORS[plabel % 200][1];
-            color.z = RANDOM_COLORS[plabel % 200][2];  
-            plane_img.at<cv::Vec3b>(i, j) = cv::Vec3b(color.x, color.y, color.z);   
+            // publish plane label image
+            cv::Mat plane_img = cv::Mat::zeros(plabel_image.size(), CV_8UC3);
+            // std::map<int,int> labels_map;
+            // std::map<int, CloudT> planes_map;
+            // std::map<int, std::vector<double>> colors_map;
+            for(int i=0; i < plabel_image.rows; i++) {
+                for(int j=0; j < plabel_image.cols; j++) {
+                    auto plabel = plabel_image.at<uint16_t>(i,j);
+                    if(plabel==0)     
+                        continue; 
+                    pcl::PointXYZ color;
+                    color.x = RANDOM_COLORS[plabel % 200][0];
+                    color.y = RANDOM_COLORS[plabel % 200][1];
+                    color.z = RANDOM_COLORS[plabel % 200][2];  
+                    plane_img.at<cv::Vec3b>(i, j) = cv::Vec3b(color.x, color.y, color.z);   
+                }
+            }
+            cv::Mat plane_img_vis;
+            cv::flip(plane_img, plane_img_vis, -1);
+            pubCvMatMsg(pl_image_pub, plane_img_vis, "velodyne", laserCloudMsg->header.stamp);
+            
+            //publish ground image
+            cv::Mat ground_img = cv::Mat::zeros(plabel_image.size(), CV_8UC3);
+            for(int i=0; i < plabel_image.rows; i++) {
+                for(int j=0; j < plabel_image.cols; j++) {
+                    auto grdlabel = grd_img.at<uint16_t>(i,j);
+                    if(grdlabel==0)     
+                        continue; 
+                    pcl::PointXYZ color;
+                    color.x = 255;
+                    color.y = 255;
+                    color.z = 255;
+                    ground_img.at<cv::Vec3b>(i, j) = cv::Vec3b(color.x, color.y, color.z);   
+                }
+            }
+            cv::Mat ground_img_vis;
+            cv::flip(ground_img, ground_img_vis, -1);
+            pubCvMatMsg(grd_image_pub, ground_img_vis, "velodyne", laserCloudMsg->header.stamp);
+            //publish labeled plane pointcloud
+            pcl::PointCloud<pcl::PointXYZRGB> color_cloud;
+            for(int i=0; i < plabel_image.rows; i++) {
+                for(int j=0; j < plabel_image.cols; j++) {
+                    auto plabel = plabel_image.at<uint16_t>(i,j);
+                    if(plabel == 0)
+                        continue;
+
+                    pcl::PointXYZ color;
+                    color.x = RANDOM_COLORS[plabel % 200][0];
+                    color.y = RANDOM_COLORS[plabel % 200][1];
+                    color.z = RANDOM_COLORS[plabel % 200][2];  
+                    pcl::PointXYZRGB pt;
+                    pt.x = x_img.at<float>(i,j);
+                    pt.y = y_img.at<float>(i,j);
+                    pt.z = z_img.at<float>(i,j);
+                    pt.r = color.z;
+                    pt.g = color.y;
+                    pt.b = color.x;
+                    color_cloud.push_back(pt);
+                }
+            }
+            sensor_msgs::PointCloud2 cloudout_msg;
+            pcl::toROSMsg(color_cloud, cloudout_msg);
+            cloudout_msg.header = laserCloudMsg->header;
+            pubPlaneCloudMsg.publish(cloudout_msg);
+
+            // save label image and timing results
+            if(SaveResult){
+                save_results_ptr->run(
+                        plabel_image, 
+                        plane_img,
+                        pl_params_vec,
+                        frame_cnt,
+                        prefix,
+                        prefix);
+            }
+
+            // save running times
+            if(SaveResult){
+                std::string pathTimesFile = output_path + "timings/times.txt";
+                saveTimesToFile(pathTimesFile, times_vec);
+
+                std::vector<double> pr_times = pe.getPRTimeVec();
+                std::vector<double> le_times = pe.getLETimeVec();
+                std::vector<double> pe_times = pe.getPETimeVec();
+
+                std::string pathPrTimesFile = output_path + "timings/pr_times.txt";
+                std::string pathLeTimesFile = output_path + "timings/le_times.txt";
+                std::string pathPeTimesFile = output_path + "timings/pe_times.txt";
+
+                saveTimesToFile(pathPrTimesFile, pr_times);
+                saveTimesToFile(pathLeTimesFile, le_times);
+                saveTimesToFile(pathPeTimesFile, pe_times);
+            }
+            // time_eclipsed = timer.Toc();
+            // cout << "Visualization time costs: " << time_eclipsed << " ms" << endl;
         }
     }
-    cv::Mat plane_img_vis;
-    cv::flip(plane_img, plane_img_vis, -1);
-    pubCvMatMsg(pl_image_pub, plane_img_vis, "velodyne", laserCloudMsg->header.stamp);
-    
-    //publish ground image
-    cv::Mat ground_img = cv::Mat::zeros(plabel_image.size(), CV_8UC3);
-    for(int i=0; i < plabel_image.rows; i++) {
-        for(int j=0; j < plabel_image.cols; j++) {
-            auto grdlabel = grd_img.at<uint16_t>(i,j);
-            if(grdlabel==0)     
-                continue; 
-            pcl::PointXYZ color;
-            color.x = 255;
-            color.y = 255;
-            color.z = 255;
-            ground_img.at<cv::Vec3b>(i, j) = cv::Vec3b(color.x, color.y, color.z);   
-        }
-    }
-    cv::Mat ground_img_vis;
-    cv::flip(ground_img, ground_img_vis, -1);
-    pubCvMatMsg(grd_image_pub, ground_img_vis, "velodyne", laserCloudMsg->header.stamp);
-    //publish labeled plane pointcloud
-    pcl::PointCloud<pcl::PointXYZRGB> color_cloud;
-    for(int i=0; i < plabel_image.rows; i++) {
-        for(int j=0; j < plabel_image.cols; j++) {
-            auto plabel = plabel_image.at<uint16_t>(i,j);
-            if(plabel == 0)
-                continue;
-
-            pcl::PointXYZ color;
-            color.x = RANDOM_COLORS[plabel % 200][0];
-            color.y = RANDOM_COLORS[plabel % 200][1];
-            color.z = RANDOM_COLORS[plabel % 200][2];  
-            pcl::PointXYZRGB pt;
-            pt.x = x_img.at<float>(i,j);
-            pt.y = y_img.at<float>(i,j);
-            pt.z = z_img.at<float>(i,j);
-            pt.r = color.z;
-            pt.g = color.y;
-            pt.b = color.x;
-            color_cloud.push_back(pt);
-        }
-    }
-    sensor_msgs::PointCloud2 cloudout_msg;
-    pcl::toROSMsg(color_cloud, cloudout_msg);
-    cloudout_msg.header = laserCloudMsg->header;
-    pubPlaneCloudMsg.publish(cloudout_msg);
-
-    // save label image and timing results
-    if(SaveResult){
-        save_results_ptr->run(
-                plabel_image, 
-                plane_img,
-                pl_params_vec,
-                frame_cnt,
-                prefix,
-                prefix);
-    }
-
-    // save running times
-    if(SaveResult){
-        std::string pathTimesFile = output_path + "timings/times.txt";
-        saveTimesToFile(pathTimesFile, times_vec);
-
-        std::vector<double> pr_times = pe.getPRTimeVec();
-        std::vector<double> le_times = pe.getLETimeVec();
-        std::vector<double> pe_times = pe.getPETimeVec();
-
-        std::string pathPrTimesFile = output_path + "timings/pr_times.txt";
-        std::string pathLeTimesFile = output_path + "timings/le_times.txt";
-        std::string pathPeTimesFile = output_path + "timings/pe_times.txt";
-
-        saveTimesToFile(pathPrTimesFile, pr_times);
-        saveTimesToFile(pathLeTimesFile, le_times);
-        saveTimesToFile(pathPeTimesFile, pe_times);
-    }
-    // time_eclipsed = timer.Toc();
-    // cout << "Visualization time costs: " << time_eclipsed << " ms" << endl;
 }
 
 int main(int argc, char * argv[]) {
@@ -287,8 +321,9 @@ int main(int argc, char * argv[]) {
     }
 
     ros::Subscriber subLidarCloud = nh.subscribe<sensor_msgs::PointCloud2>("/velodyne_points", 
-    2, &cloudMsgHandler);
-
+    10, &cloudMsgHandler);
+    ros::Subscriber subNonGroundCloud = nh.subscribe<sensor_msgs::PointCloud2>("/patchwork/non_ground", 
+    10, &nonGroundCloudMsgHandler);
     pubPlaneCloudMsg = nh.advertise<sensor_msgs::PointCloud2>("/plane_cloud", 1);
     pubLineSegmentsMarker = nh.advertise<visualization_msgs::Marker>("/lines", 1);
     image_transport::ImageTransport it_(nh);
@@ -298,11 +333,15 @@ int main(int argc, char * argv[]) {
     pl_image_pub = it_.advertise("/plane_img", 1);
     grd_image_pub  = it_.advertise("/ground_img", 1);
 
-    ros::Rate r(100);
-    while(ros::ok()) {
-    	ros::spinOnce();
-    	r.sleep();
-    }
+    // ros::Rate r(100);
+    // while(ros::ok()) {
+    // 	ros::spinOnce();
+    // 	r.sleep();
+    // }
 
+    std::thread plane_segmentation_thread(PlaneSegmentationThread);
+
+    ros::spin();
+    
     return 0;
 }

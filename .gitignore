@@ -2,3 +2,4 @@ build/*
 scripts/*.cam
 scripts/*.png
 
+CMakeLists.txt

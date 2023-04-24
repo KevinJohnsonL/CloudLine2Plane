@@ -3,6 +3,7 @@
 
 #include "projection_params.h"
 #include "common.h"
+#include "tictoc.h"
 
 // store (z,rxy) (x,y).
 class CloudProjection {
@@ -44,6 +45,9 @@ public:
     m_ground_image = cv::Mat::zeros(m_params.rows(),
                                         m_params.cols(),
                                         cv::DataType<uint16_t>::type);
+    m_mask_image = 255*cv::Mat::ones(m_params.rows(),
+                                        m_params.cols(),
+                                        cv::DataType<uint8_t>::type);
   }
 
   void InitFromPoints(const CloudT& points) {
@@ -56,7 +60,7 @@ public:
   		size_t bin_row = m_params.RowFromAngle(vangle);
   		size_t bin_col = m_params.ColFromAngle(hangle);
   		auto& current_written_range = m_range_image.at<float>(bin_row, bin_col);
-  		if(current_written_range > range && range>3) {
+  		if(current_written_range > range) { //  && range>3.0
   			current_written_range = range;
   			m_rxy_image.at<float>(bin_row, bin_col) = rxy;
   			m_x_image.at<float>(bin_row, bin_col) = pt.x;
@@ -64,8 +68,18 @@ public:
   			m_z_image.at<float>(bin_row, bin_col) = pt.z;
   			m_valid_image.at<uint16_t>(bin_row, bin_col) = 1;
   			m_index_image.at<int>(bin_row, bin_col) = i;
+        m_mask_image.at<uint8_t>(bin_row, bin_col) = 0;
   		}
   	}
+    //cv Mat to InputArray
+    // range image completion(worked but not applied)
+    // TicToc timer;
+    // timer.Tic();
+    // cv::InputArray range_image = m_range_image;
+    // cv::inpaint(range_image, m_mask_image, m_range_image, 3, cv::INPAINT_NS);
+    // double time = timer.Toc();
+    // std::cout << "inpaint time: " << time << std::endl;
+
   }
 
   // void LabelGroundPoints(){ 
@@ -99,44 +113,44 @@ public:
   //   }
   // }
 
-  void InitFromOrganizedPoints(const CloudT& points, bool colwise=true) {
-  	// fprintf(stderr, " Cloud size: %d, \n", points.size());
-  	for(int i=0; i < points.size(); i++) {
+  // void InitFromOrganizedPoints(const CloudT& points, bool colwise=true) {
+  // 	// fprintf(stderr, " Cloud size: %d, \n", points.size());
+  // 	for(int i=0; i < points.size(); i++) {
 
-  		// float vangle = asin(pt.z / range);
-  		// float hangle = atan2(pt.y, pt.x);
-  		size_t bin_row, bin_col; 
-        if(colwise) {
-            bin_row = i%m_params.rows();
-  		    bin_row = i/m_params.rows();
-        } else {
-  		    bin_row = i/m_params.cols();
-  		    bin_col = i%m_params.cols();  
-        }
+  // 		// float vangle = asin(pt.z / range);
+  // 		// float hangle = atan2(pt.y, pt.x);
+  // 		size_t bin_row, bin_col; 
+  //       if(colwise) {
+  //           bin_row = i%m_params.rows();
+  // 		    bin_row = i/m_params.rows();
+  //       } else {
+  // 		    bin_row = i/m_params.cols();
+  // 		    bin_col = i%m_params.cols();  
+  //       }
 
-  		const auto& pt = points[i];
-        if(std::isnan(pt.x) || std::isnan(pt.y) || std::isnan(pt.z)) {
-            m_range_image.at<float>(bin_row, bin_col) = std::numeric_limits<float>::quiet_NaN(); 
-  			m_rxy_image.at<float>(bin_row, bin_col) = std::numeric_limits<float>::quiet_NaN();
-  			m_valid_image.at<uint16_t>(bin_row, bin_col) = 0;            
-            continue;
-        }
+  // 		const auto& pt = points[i];
+  //       if(std::isnan(pt.x) || std::isnan(pt.y) || std::isnan(pt.z)) {
+  //           m_range_image.at<float>(bin_row, bin_col) = std::numeric_limits<float>::quiet_NaN(); 
+  // 			m_rxy_image.at<float>(bin_row, bin_col) = std::numeric_limits<float>::quiet_NaN();
+  // 			m_valid_image.at<uint16_t>(bin_row, bin_col) = 0;            
+  //           continue;
+  //       }
 
-  		float rxy = sqrt(pt.x*pt.x + pt.y*pt.y);
-  		float range = sqrt(rxy*rxy + pt.z*pt.z);
+  // 		float rxy = sqrt(pt.x*pt.x + pt.y*pt.y);
+  // 		float range = sqrt(rxy*rxy + pt.z*pt.z);
 
-  		auto& current_written_range = m_range_image.at<float>(bin_row, bin_col);
-  		if(range > 0.001) {
-  			current_written_range = range;
-  			m_rxy_image.at<float>(bin_row, bin_col) = rxy;
-  			m_x_image.at<float>(bin_row, bin_col) = pt.x;
-  			m_y_image.at<float>(bin_row, bin_col) = pt.y;
-  			m_z_image.at<float>(bin_row, bin_col) = pt.z;
-  			m_valid_image.at<uint16_t>(bin_row, bin_col) = 1;
-  			m_index_image.at<int>(bin_row, bin_col) = i;  		
-  		}
-  	}
-  }
+  // 		auto& current_written_range = m_range_image.at<float>(bin_row, bin_col);
+  // 		if(range > 0.001) {
+  // 			current_written_range = range;
+  // 			m_rxy_image.at<float>(bin_row, bin_col) = rxy;
+  // 			m_x_image.at<float>(bin_row, bin_col) = pt.x;
+  // 			m_y_image.at<float>(bin_row, bin_col) = pt.y;
+  // 			m_z_image.at<float>(bin_row, bin_col) = pt.z;
+  // 			m_valid_image.at<uint16_t>(bin_row, bin_col) = 1;
+  // 			m_index_image.at<int>(bin_row, bin_col) = i;  		
+  // 		}
+  // 	}
+  // }
 
 
   const cv::Mat& depth_image() const {
@@ -217,6 +231,7 @@ private:
   cv::Mat m_valid_image;
   cv::Mat m_index_image;
   cv::Mat m_ground_image;
+  cv::Mat m_mask_image;
 };
 
 

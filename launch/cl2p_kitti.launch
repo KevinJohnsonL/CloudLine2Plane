@@ -2,7 +2,8 @@
 <launch>
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find cloudline2plane)/rviz_cfg/lineclustering.rviz" />
   <node name="cloud2plane" pkg="cloudline2plane" type="cloudline2plane_kitti" output="screen">
-  <remap from="/velodyne_points" to="/patchwork/non_ground" />
+  <!-- <remap from="/velodyne_points" to="/patchwork/non_ground" /> -->
+  <remap from="velodyne_points" to="/patchwork/cloud" />
   <!-- <param name="~lidar_name" value="HDL-64" />
   
   <param name="~v_least_thresh" value="0.05" />
